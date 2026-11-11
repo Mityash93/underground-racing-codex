@@ -1,0 +1,6 @@
+.godot/
+.DS_Store
+builds/
+tests/artifacts/*
+!tests/artifacts/.gdignore
+*.log
