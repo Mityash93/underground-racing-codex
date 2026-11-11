@@ -4,3 +4,5 @@ builds/
 tests/artifacts/*
 !tests/artifacts/.gdignore
 *.log
+assets/audio/local/*
+!assets/audio/local/README.md

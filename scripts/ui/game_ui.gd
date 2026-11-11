@@ -6,6 +6,10 @@ signal pause_requested
 signal resume_requested
 signal restart_requested
 signal menu_requested
+signal music_toggled(enabled: bool)
+signal music_volume_changed(volume: float)
+signal custom_music_requested
+signal default_music_requested
 
 const ORANGE := Color("ff774d")
 const CYAN := Color("38dce9")
@@ -22,6 +26,10 @@ var minimap: RaceMinimap
 var _speed_bar: ProgressBar
 var _fps: Label
 var _gear: Label
+var _music_panel: PanelContainer
+var _music_title: Label
+var _music_toggle: CheckButton
+var _music_volume: HSlider
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -48,16 +56,16 @@ func _ready() -> void:
 	shade.offset_right = 780
 	menu.add_child(shade)
 	var menu_box := _vbox(menu, Vector2(110, 145), Vector2(610, 760))
-	_label(menu_box, "SL / ORIGINAL STREET RACING", 22, CYAN)
-	_label(menu_box, "STREET\nLEGENDS", 102, Color.WHITE)
-	_label(menu_box, "THE CITY IS YOUR STARTING GRID.", 22, ORANGE)
+	_label(menu_box, "УЛ / УЛИЧНЫЕ ГОНКИ", 22, CYAN)
+	_label(menu_box, "УЛИЧНЫЕ\nЛЕГЕНДЫ", 88, Color.WHITE)
+	_label(menu_box, "Город — твоя стартовая решётка.", 22, ORANGE)
 	_space(menu_box, 24)
-	_label(menu_box, "NEON DISTRICT  /  NIGHT RUN\n2 LAPS  ·  SOLO TIME ATTACK", 24, Color("adc1d3"))
+	_label(menu_box, "НЕОНОВЫЙ РАЙОН / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ГОНКА НА ВРЕМЯ", 24, Color("adc1d3"))
 	_space(menu_box, 24)
-	_button(menu_box, "START RACE   →", func(): start_requested.emit())
-	_button(menu_box, "QUIT", func(): get_tree().quit())
-	_label(menu_box, "WASD / ARROWS  •  SPACE TO DRIFT", 19, Color("9bb1c3"))
-	var version := _label(menu, "PROTOTYPE 01     //     BUILT FOR THE NIGHT", 18, Color("9cb5c7"))
+	_button(menu_box, "НАЧАТЬ ЗАЕЗД   →", func(): start_requested.emit())
+	_button(menu_box, "ВЫХОД", func(): get_tree().quit())
+	_label(menu_box, "WASD / СТРЕЛКИ · ПРОБЕЛ — ЗАНОС", 19, Color("9bb1c3"))
+	var version := _label(menu, "ПРОТОТИП 01     //     РОЖДЁННЫЙ ДЛЯ НОЧИ", 18, Color("9cb5c7"))
 	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	version.position = Vector2(110, 1020)
 	hud = _layer(root)
@@ -65,10 +73,10 @@ func _ready() -> void:
 	var top := _panel(hud, Vector2(52, 40), Vector2(690, 126))
 	stats = _label(top, "", 30)
 	stats.position = Vector2(24, 16)
-	status = _label(top, "NEON DISTRICT", 19, CYAN)
+	status = _label(top, "НЕОНОВЫЙ РАЙОН", 19, CYAN)
 	status.position = Vector2(24, 82)
 	var pause_button := Button.new()
-	pause_button.text = "Ⅱ   PAUSE"
+	pause_button.text = "Ⅱ   ПАУЗА"
 	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	pause_button.offset_left = -244
 	pause_button.offset_right = -52
@@ -87,7 +95,7 @@ func _ready() -> void:
 	var speed_box := VBoxContainer.new()
 	speed_card.add_child(speed_box)
 	speed = _label(speed_box, "000", 88, Color.WHITE)
-	_gear = _label(speed_box, "KM/H     /     GEAR 1", 18, ORANGE)
+	_gear = _label(speed_box, "КМ/Ч     /     ПЕРЕДАЧА 1", 18, ORANGE)
 	_speed_bar = ProgressBar.new()
 	_speed_bar.custom_minimum_size = Vector2(290, 8)
 	_speed_bar.max_value = 225.0
@@ -100,11 +108,12 @@ func _ready() -> void:
 	minimap.offset_right = 330
 	minimap.offset_top = -275
 	minimap.offset_bottom = -55
-	var help := _label(hud, "WASD / ARROWS   DRIVE     SPACE   DRIFT     R   RECOVER +5s     C   CAMERA     M   SOUND     ESC   PAUSE", 18, Color("aac1d2"))
+	var help := _label(hud, "WASD / СТРЕЛКИ — УПРАВЛЕНИЕ · ПРОБЕЛ — ЗАНОС · R — ВОЗВРАТ (+5 с)\nC — КАМЕРА · M — МОТОР · N — МУЗЫКА · ESC — ПАУЗА", 16, Color("aac1d2"))
 	help.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	help.offset_left = -530
-	help.offset_top = -38
+	help.offset_left = -650
+	help.offset_top = -50
 	help.offset_right = 650
+	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.offset_bottom = -8
 	_fps = _label(hud, "", 16, Color("9fb4c6"))
 	_fps.position = Vector2(54, 176)
@@ -117,32 +126,90 @@ func _ready() -> void:
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_panel = _modal(root)
 	var pause_box := _vbox(pause_panel, Vector2(690, 240), Vector2(540, 600))
-	_label(pause_box, "RACE PAUSED", 56)
-	_label(pause_box, "TAKE A BREATH. THEN TAKE THE CORNER.", 18, CYAN)
+	_label(pause_box, "ПАУЗА", 56)
+	_label(pause_box, "ПЕРЕДОХНИ — И СНОВА НА ТРАССУ.", 18, CYAN)
 	_space(pause_box, 26)
-	_button(pause_box, "RESUME", func(): resume_requested.emit())
-	_button(pause_box, "RESTART RACE", func(): restart_requested.emit())
-	_button(pause_box, "MAIN MENU", func(): menu_requested.emit())
-	_button(pause_box, "QUIT", func(): get_tree().quit())
+	_button(pause_box, "ПРОДОЛЖИТЬ", func(): resume_requested.emit())
+	_button(pause_box, "НАЧАТЬ ЗАНОВО", func(): restart_requested.emit())
+	_button(pause_box, "ГЛАВНОЕ МЕНЮ", func(): menu_requested.emit())
+	_button(pause_box, "ВЫХОД", func(): get_tree().quit())
 	results = _modal(root)
 	var result_box := _vbox(results, Vector2(600, 200), Vector2(720, 700))
-	_label(result_box, "NIGHT RUN / COMPLETE", 24, CYAN)
-	_label(result_box, "FINISH LINE.", 72, ORANGE)
-	results_text = _label(result_box, "", 30)
+	_label(result_box, "НОЧНОЙ ЗАЕЗД ЗАВЕРШЁН", 24, CYAN)
+	_label(result_box, "ФИНИШ!", 72, ORANGE)
+	results_text = _label(result_box, "", 28)
 	_space(result_box, 25)
-	_button(result_box, "RACE AGAIN", func(): restart_requested.emit())
-	_button(result_box, "MAIN MENU", func(): menu_requested.emit())
+	_button(result_box, "ЕЩЁ ОДИН ЗАЕЗД", func(): restart_requested.emit())
+	_button(result_box, "ГЛАВНОЕ МЕНЮ", func(): menu_requested.emit())
+	_build_music_panel(root)
 	show_menu()
+
+func _build_music_panel(root: Control) -> void:
+	_music_panel = PanelContainer.new()
+	_music_panel.add_theme_stylebox_override("panel", _style())
+	root.add_child(_music_panel)
+	_music_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_music_panel.offset_left = -660
+	_music_panel.offset_right = -52
+	_music_panel.offset_top = -285
+	_music_panel.offset_bottom = -55
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	_music_panel.add_child(box)
+	_music_title = _label(box, "МУЗЫКА / НЕОНОВЫЙ ПУЛЬС", 20, CYAN)
+	_music_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var settings := HBoxContainer.new()
+	box.add_child(settings)
+	_music_toggle = CheckButton.new()
+	_music_toggle.text = "Музыка (N)"
+	_music_toggle.button_pressed = true
+	_music_toggle.add_theme_font_size_override("font_size", 20)
+	_music_toggle.toggled.connect(func(value: bool): music_toggled.emit(value))
+	settings.add_child(_music_toggle)
+	_music_volume = HSlider.new()
+	_music_volume.min_value = 0
+	_music_volume.max_value = 100
+	_music_volume.value = 55
+	_music_volume.custom_minimum_size.x = 240
+	_music_volume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_music_volume.tooltip_text = "Громкость музыки"
+	_music_volume.value_changed.connect(func(value: float): music_volume_changed.emit(value / 100.0))
+	settings.add_child(_music_volume)
+	var buttons := HBoxContainer.new()
+	box.add_child(buttons)
+	for i in 2:
+		var button := Button.new()
+		button.text = "СВОЙ ТРЕК…" if i == 0 else "ВСТРОЕННЫЙ ТРЕК"
+		button.add_theme_font_size_override("font_size", 18)
+		button.custom_minimum_size.y = 46
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if i == 0:
+			button.pressed.connect(func(): custom_music_requested.emit())
+		else:
+			button.pressed.connect(func(): default_music_requested.emit())
+		buttons.add_child(button)
+	_label(box, "OGG, MP3, WAV · файл остаётся на компьютере", 16, Color("9cb5c7"))
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(_music_panel):
+		_music_panel.visible = menu.visible or pause_panel.visible
+
+func set_music_title(title: String) -> void:
+	_music_title.text = "МУЗЫКА / " + title.to_upper()
+
+func set_music_settings(enabled: bool, volume: float) -> void:
+	_music_toggle.set_pressed_no_signal(enabled)
+	_music_volume.set_value_no_signal(volume * 100.0)
 
 func update_race(car: ArcadeCar, race: RaceManager) -> void:
 	var reverse := car.linear_velocity.dot(-car.global_basis.z) < -0.6
-	_gear.text = "KM/H     /     %s" % ("REVERSE" if reverse else "GEAR %d" % car.engine.current_gear)
+	_gear.text = "КМ/Ч     /     %s" % ("ЗАДНИЙ ХОД" if reverse else "ПЕРЕДАЧА %d" % car.engine.current_gear)
 	speed.text = "%03d" % roundi(car.speed_kmh)
 	_speed_bar.value = car.speed_kmh
-	stats.text = "LAP  %d / %d       %s" % [race.lap, race.total_laps, RaceManager.format_time(race.elapsed)]
-	status.text = "GATE %02d / %02d    /    LAP %s" % [race.next_checkpoint if race.next_checkpoint > 0 else 12, 12, RaceManager.format_time(race.lap_time)]
-	_fps.text = "%d FPS  /  %s" % [Engine.get_frames_per_second(), "DRIFT" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else "NEON DISTRICT"]
-	countdown_label.text = str(ceili(race.countdown)) if race.state == RaceManager.State.COUNTDOWN else ("GO" if race.state == RaceManager.State.RUNNING and race.elapsed < 0.85 else "")
+	stats.text = "КРУГ  %d / %d      %s" % [race.lap, race.total_laps, RaceManager.format_time(race.elapsed)]
+	status.text = "ВОРОТА %02d / %02d   /   КРУГ %s" % [race.next_checkpoint if race.next_checkpoint > 0 else 12, 12, RaceManager.format_time(race.lap_time)]
+	_fps.text = "%d кадр/с  /  %s" % [Engine.get_frames_per_second(), "ЗАНОС" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else "НЕОНОВЫЙ РАЙОН"]
+	countdown_label.text = str(ceili(race.countdown)) if race.state == RaceManager.State.COUNTDOWN else ("СТАРТ!" if race.state == RaceManager.State.RUNNING and race.elapsed < 0.85 else "")
 
 func show_menu() -> void:
 	menu.show()
@@ -157,7 +224,7 @@ func show_race() -> void:
 	results.hide()
 
 func show_results(race: RaceManager) -> void:
-	results_text.text = "TOTAL    %s\nBEST LAP    %s\n\nLAP 1    %s\nLAP 2    %s\nRECOVERIES    %d  (+5s each, included)" % [RaceManager.format_time(race.elapsed), RaceManager.format_time(race.best_lap), RaceManager.format_time(race.lap_times[0]), RaceManager.format_time(race.lap_times[1]), race.recoveries]
+	results_text.text = "ОБЩЕЕ ВРЕМЯ    %s\nЛУЧШИЙ КРУГ    %s\n\nКРУГ 1    %s\nКРУГ 2    %s\nВОЗВРАТОВ: %d  (штраф +5 с включён)" % [RaceManager.format_time(race.elapsed), RaceManager.format_time(race.best_lap), RaceManager.format_time(race.lap_times[0]), RaceManager.format_time(race.lap_times[1]), race.recoveries]
 	results.show()
 
 func _layer(parent: Node) -> Control:

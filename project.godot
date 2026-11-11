@@ -14,8 +14,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="STREET LEGENDS"
-config/description="An original neon city time attack racer."
+config/name="Уличные легенды"
+config/description="Оригинальные ночные уличные гонки на время."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 
@@ -28,6 +28,11 @@ window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 
 [input]
+
+mute_music={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":78)]
+}
 
 mute_audio={
 "deadzone": 0.2,

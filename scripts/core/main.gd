@@ -8,9 +8,22 @@ extends Node3D
 var in_menu := true
 var _orbit := 0.4
 var _gate_marker: Node3D
+var music: MusicManager
 
 func _ready() -> void:
 	_build_environment()
+	music = MusicManager.new()
+	music.name = "Music"
+	add_child(music)
+	ui.music_toggled.connect(music.set_enabled)
+	ui.music_volume_changed.connect(music.set_volume)
+	ui.custom_music_requested.connect(music.choose_local_track)
+	ui.default_music_requested.connect(music.use_default_track)
+	music.track_changed.connect(ui.set_music_title)
+	music.settings_changed.connect(ui.set_music_settings)
+	music.load_failed.connect(ui.set_music_title)
+	ui.set_music_title(music.track_title)
+	ui.set_music_settings(music.enabled, music.volume)
 	camera.target = car
 	race.track = track
 	race.car = car
@@ -89,6 +102,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _process(delta: float) -> void:
+	music.set_context(not in_menu and race.state == RaceManager.State.RUNNING, get_tree().paused)
 	if in_menu:
 		_orbit += delta * 0.09
 		camera.global_position = car.global_position + Vector3(sin(_orbit) * 9.0, 3.2, cos(_orbit) * 9.0)
@@ -104,7 +118,7 @@ func _build_gate_marker() -> void:
 	for side in [-1.0, 1.0]:
 		GameGeometry.box(_gate_marker, Vector3(0.25, 4.0, 0.25), Vector3(side * 11.6, 2.0, 0), neon)
 	var text := Label3D.new()
-	text.text = "▼     CHECKPOINT     ▼"
+	text.text = "▼     КОНТРОЛЬНАЯ ТОЧКА     ▼"
 	text.font_size = 80
 	text.pixel_size = 0.01
 	text.position.y = 5.5

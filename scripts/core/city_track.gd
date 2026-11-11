@@ -167,7 +167,7 @@ func _build_city() -> void:
 			equipment.append(GameGeometry.box_transform(at + Vector3.UP * (height + 1.0), Vector3(width * 0.30, 2.0, 4.5), yaw))
 			if i % 24 == 0 and side_sign > 0:
 				var sign := Label3D.new()
-				sign.text = ["NIGHT OWL", "APEX GARAGE", "24 / MART", "AFTER HOURS"][int(i / 24) % 4]
+				sign.text = ["НОЧНОЙ ФИЛИН", "ГАРАЖ АПЕКС", "24 / МАРКЕТ", "ПОСЛЕ ЗАКАТА"][int(i / 24) % 4]
 				sign.font_size = 64
 				sign.pixel_size = 0.012
 				sign.modulate = Color("edb76f")
@@ -202,7 +202,7 @@ func _build_city() -> void:
 		billboard.transform = transform_here
 		GameGeometry.box(billboard, Vector3(12, 5, 0.3), Vector3(20, 8, 0), GameGeometry.material(Color("0b1828")))
 		var text := Label3D.new()
-		text.text = ["MIDNIGHT / 01", "AFTER HOURS", "NEON DISTRICT", "STREET LEGENDS", "NO LIMITS"][int(i / 36)]
+		text.text = ["ПОЛУНОЧЬ / 01", "ПОСЛЕ ЗАКАТА", "НЕОНОВЫЙ РАЙОН", "УЛИЧНЫЕ ЛЕГЕНДЫ", "БЕЗ ОГРАНИЧЕНИЙ"][int(i / 36)]
 		text.font_size = 62
 		text.pixel_size = 0.012
 		text.modulate = Color("37d7ec")
@@ -223,7 +223,7 @@ func _build_start() -> void:
 		GameGeometry.box(start, Vector3(0.6, 8, 0.6), Vector3(x, 4, 0), dark)
 	GameGeometry.box(start, Vector3(27, 1.5, 0.6), Vector3(0, 8, 0), dark)
 	var title := Label3D.new()
-	title.text = "STREET LEGENDS   //   NIGHT RUN"
+	title.text = "УЛИЧНЫЕ ЛЕГЕНДЫ   //   НОЧНОЙ ЗАЕЗД"
 	title.font_size = 80
 	title.pixel_size = 0.008
 	title.position = Vector3(0, 8, 0.34)

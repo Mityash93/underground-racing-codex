@@ -174,7 +174,7 @@ static func _bumpers(parent: Node3D, paint: Material, trim: Material, rear_light
 			rounded_box(parent, Vector3(0.57, 0.024, 0.016), Vector3(side * 0.56, y, 2.32), 0.009, rear_lights)
 	rounded_box(parent, Vector3(0.49, 0.155, 0.025), Vector3(0, 0.535, 2.30), 0.015, trim)
 	var plate := Label3D.new()
-	plate.text = "SL / 01"
+	plate.text = "УЛ / 01"
 	plate.font_size = 48
 	plate.pixel_size = 0.0018
 	plate.position = Vector3(0, 0.535, 2.32)
