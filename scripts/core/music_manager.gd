@@ -7,6 +7,7 @@ signal settings_changed(enabled: bool, volume: float)
 signal load_failed(message: String)
 
 const DEFAULT_TRACK := "res://assets/audio/neon_pulse.wav"
+const LOCAL_CONFIG := "res://assets/audio/local/default_music.cfg"
 var enabled := true
 var volume := 0.55
 var track_title := "Неоновый пульс"
@@ -30,6 +31,19 @@ func _ready() -> void:
 	_picker.file_selected.connect(load_custom_track)
 	add_child(_picker)
 	use_default_track()
+	_load_local_startup_track()
+
+func _load_local_startup_track() -> void:
+	# Optional per-computer choice. Both the config and recording stay outside Git.
+	if not FileAccess.file_exists(LOCAL_CONFIG):
+		return
+	var config := ConfigFile.new()
+	if config.load(LOCAL_CONFIG) != OK:
+		return
+	var path := str(config.get_value("music", "path", ""))
+	if not path.is_empty() and load_custom_track(path):
+		track_title = str(config.get_value("music", "title", track_title))
+		track_changed.emit(track_title)
 
 func _loop(stream: AudioStream) -> AudioStream:
 	if stream is AudioStreamWAV:

@@ -2,6 +2,7 @@ extends Node3D
 
 @onready var track: CityTrack = $NeonDistrict
 @onready var car: ArcadeCar = $PlayerCar
+@onready var rival: ArcadeCar = $RivalCar
 @onready var camera: ChaseCamera = $ChaseCamera
 @onready var race: RaceManager = $RaceManager
 @onready var ui: GameUI = $GameUI
@@ -27,6 +28,12 @@ func _ready() -> void:
 	camera.target = car
 	race.track = track
 	race.car = car
+	race.configure_rival(rival)
+	var driver: RivalDriver = rival.get_node("Driver")
+	driver.track = track
+	driver.other_car = car
+	rival.engine.volume_trim_db = -14.0
+	ui.minimap.rival = rival
 	ui.minimap.track = track
 	ui.minimap.car = car
 	ui.minimap.race = race
@@ -48,16 +55,16 @@ func _build_environment() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("030819")
-	sky_material.sky_horizon_color = Color("263453")
-	sky_material.ground_bottom_color = Color("0a1220")
-	sky_material.ground_horizon_color = Color("3b374c")
+	var sky_material := ShaderMaterial.new()
+	sky_material.shader = load("res://assets/materials/night_sky.gdshader")
+	sky_material.set_shader_parameter("reflection_panorama", load("res://assets/environment/polyhaven/cobblestone_street_night_1k.hdr"))
+	sky_material.set_shader_parameter("reflection_energy", 0.28)
 	sky.sky_material = sky_material
+	sky.radiance_size = Sky.RADIANCE_SIZE_128
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("8da5cd")
-	environment.ambient_light_energy = 0.62
+	environment.ambient_light_color = Color("b2bdcf")
+	environment.ambient_light_energy = 0.52
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled = true
 	environment.fog_light_color = Color("27334f")
@@ -66,8 +73,8 @@ func _build_environment() -> void:
 	add_child(world)
 	var moon := DirectionalLight3D.new()
 	moon.rotation_degrees = Vector3(-42, -32, 0)
-	moon.light_color = Color("a2bded")
-	moon.light_energy = 1.3
+	moon.light_color = Color("c2d3e8")
+	moon.light_energy = 1.05
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 150.0
 	add_child(moon)
@@ -85,6 +92,10 @@ func show_menu() -> void:
 	get_tree().paused = false
 	in_menu = true
 	race.state = RaceManager.State.IDLE
+	race.rival_race.state = RaceManager.State.IDLE
+	var rival_grid := track.grid_transform()
+	rival_grid.origin += rival_grid.basis.x * 3.2
+	rival.park_at(rival_grid)
 	car.park_at(track.grid_transform())
 	camera.set_physics_process(false)
 	ui.show_menu()

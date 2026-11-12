@@ -2,6 +2,7 @@ class_name RaceMinimap
 extends Control
 
 var track: CityTrack
+var rival: ArcadeCar
 var car: ArcadeCar
 var race: RaceManager
 var _background: StyleBoxFlat
@@ -29,6 +30,8 @@ func _draw() -> void:
 	draw_polyline(line, Color("8bafc3"), 2.0, true)
 	if is_instance_valid(race):
 		draw_circle(_map(track.checkpoints[race.next_checkpoint].origin), 6.0, Color("ff794d"))
+	if is_instance_valid(rival):
+		draw_circle(_map(rival.global_position), 6.0, Color("ff3355"))
 	if is_instance_valid(car):
 		var at := _map(car.global_position)
 		var f := -car.global_basis.z

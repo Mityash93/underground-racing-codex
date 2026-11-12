@@ -85,10 +85,9 @@ func _build_surface() -> void:
 			st.set_normal(Vector3.UP)
 			st.add_vertex(vertex)
 	var road := MeshInstance3D.new()
+	road.name = "RoadSurface"
 	road.mesh = st.commit()
-	var asphalt := ShaderMaterial.new()
-	asphalt.shader = load("res://assets/materials/asphalt.gdshader")
-	road.material_override = asphalt
+	road.material_override = load("res://resources/road_asphalt.tres")
 	add_child(road)
 
 func _build_streetscape() -> void:

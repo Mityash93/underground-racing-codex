@@ -21,6 +21,8 @@ var speed: Label
 var stats: Label
 var status: Label
 var countdown_label: Label
+var place: Label
+var result_title: Label
 var results_text: Label
 var minimap: RaceMinimap
 var _speed_bar: ProgressBar
@@ -60,7 +62,7 @@ func _ready() -> void:
 	_label(menu_box, "УЛИЧНЫЕ\nЛЕГЕНДЫ", 88, Color.WHITE)
 	_label(menu_box, "Город — твоя стартовая решётка.", 22, ORANGE)
 	_space(menu_box, 24)
-	_label(menu_box, "НЕОНОВЫЙ РАЙОН / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ГОНКА НА ВРЕМЯ", 24, Color("adc1d3"))
+	_label(menu_box, "НЕОНОВЫЙ РАЙОН / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ДУЭЛЬ С AI «ВЕКТОР»", 24, Color("adc1d3"))
 	_space(menu_box, 24)
 	_button(menu_box, "НАЧАТЬ ЗАЕЗД   →", func(): start_requested.emit())
 	_button(menu_box, "ВЫХОД", func(): get_tree().quit())
@@ -70,11 +72,13 @@ func _ready() -> void:
 	version.position = Vector2(110, 1020)
 	hud = _layer(root)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var top := _panel(hud, Vector2(52, 40), Vector2(690, 126))
+	var top := _panel(hud, Vector2(52, 40), Vector2(760, 170))
 	stats = _label(top, "", 30)
 	stats.position = Vector2(24, 16)
 	status = _label(top, "НЕОНОВЫЙ РАЙОН", 19, CYAN)
 	status.position = Vector2(24, 82)
+	place = _label(top, "", 24, ORANGE)
+	place.position = Vector2(24, 117)
 	var pause_button := Button.new()
 	pause_button.text = "Ⅱ   ПАУЗА"
 	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -116,7 +120,7 @@ func _ready() -> void:
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.offset_bottom = -8
 	_fps = _label(hud, "", 16, Color("9fb4c6"))
-	_fps.position = Vector2(54, 176)
+	_fps.position = Vector2(54, 224)
 	countdown_label = _label(hud, "", 120, ORANGE)
 	countdown_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	countdown_label.offset_left = -420
@@ -136,7 +140,7 @@ func _ready() -> void:
 	results = _modal(root)
 	var result_box := _vbox(results, Vector2(600, 200), Vector2(720, 700))
 	_label(result_box, "НОЧНОЙ ЗАЕЗД ЗАВЕРШЁН", 24, CYAN)
-	_label(result_box, "ФИНИШ!", 72, ORANGE)
+	result_title = _label(result_box, "ФИНИШ!", 72, ORANGE)
 	results_text = _label(result_box, "", 28)
 	_space(result_box, 25)
 	_button(result_box, "ЕЩЁ ОДИН ЗАЕЗД", func(): restart_requested.emit())
@@ -208,6 +212,8 @@ func update_race(car: ArcadeCar, race: RaceManager) -> void:
 	_speed_bar.value = car.speed_kmh
 	stats.text = "КРУГ  %d / %d      %s" % [race.lap, race.total_laps, RaceManager.format_time(race.elapsed)]
 	status.text = "ВОРОТА %02d / %02d   /   КРУГ %s" % [race.next_checkpoint if race.next_checkpoint > 0 else 12, 12, RaceManager.format_time(race.lap_time)]
+	var gap := race.rival_gap_meters()
+	place.text = "МЕСТО %d / 2 · ВЕКТОР %s %d м" % [race.player_position(), "ПОЗАДИ" if gap >= 0 else "ВПЕРЕДИ", roundi(absf(gap))] if race.is_duel() else "ЗАЕЗД НА ВРЕМЯ"
 	_fps.text = "%d кадр/с  /  %s" % [Engine.get_frames_per_second(), "ЗАНОС" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else "НЕОНОВЫЙ РАЙОН"]
 	countdown_label.text = str(ceili(race.countdown)) if race.state == RaceManager.State.COUNTDOWN else ("СТАРТ!" if race.state == RaceManager.State.RUNNING and race.elapsed < 0.85 else "")
 
@@ -224,7 +230,8 @@ func show_race() -> void:
 	results.hide()
 
 func show_results(race: RaceManager) -> void:
-	results_text.text = "ОБЩЕЕ ВРЕМЯ    %s\nЛУЧШИЙ КРУГ    %s\n\nКРУГ 1    %s\nКРУГ 2    %s\nВОЗВРАТОВ: %d  (штраф +5 с включён)" % [RaceManager.format_time(race.elapsed), RaceManager.format_time(race.best_lap), RaceManager.format_time(race.lap_times[0]), RaceManager.format_time(race.lap_times[1]), race.recoveries]
+	result_title.text = ("ПОБЕДА!" if race.winner == "player" else "ВЕКТОР ПОБЕДИЛ") if race.is_duel() else "ФИНИШ!"
+	results_text.text = "ОБЩЕЕ ВРЕМЯ    %s\nЛУЧШИЙ КРУГ    %s\n\nКРУГ 1    %s\nКРУГ 2    %s\nВОЗВРАТОВ: %d  (штраф +5 с включён)" % [RaceManager.format_time(race.elapsed), RaceManager.format_time(race.best_lap), RaceManager.format_time(race.lap_times[0] if race.lap_times.size() > 0 else INF), RaceManager.format_time(race.lap_times[1] if race.lap_times.size() > 1 else INF), race.recoveries]
 	results.show()
 
 func _layer(parent: Node) -> Control:

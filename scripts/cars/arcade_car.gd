@@ -4,6 +4,16 @@ extends RigidBody3D
 signal recovery_requested
 
 @export var tuning: CarTuning
+@export_group("Управление")
+@export var external_driver := false
+@export_enum("T-Roc 2022", "Красный спортивный седан") var appearance := 0
+@export_group("Внешний вид — импорт модели")
+@export var body_model: PackedScene
+@export var wheel_model: PackedScene
+@export_range(0.01, 10.0, 0.01) var body_model_scale := 1.0
+@export var body_model_offset := Vector3.ZERO
+@export var body_model_rotation_degrees := Vector3.ZERO
+@export_range(0.01, 10.0, 0.01) var wheel_model_scale := 1.0
 var controls_enabled := false
 var steer := 0.0
 var throttle := 0.0
@@ -21,6 +31,8 @@ var _reset_pending := false
 var _upside_down_time := 0.0
 var _previous_velocity := Vector3.ZERO
 var _filtered_acceleration := Vector3.ZERO
+var _drive_command := Vector3.ZERO
+var _drift_command := false
 
 func _ready() -> void:
 	if tuning == null:
@@ -50,7 +62,7 @@ func _ready() -> void:
 	engine.car = self
 	add_child(engine)
 	var headlights := SpotLight3D.new()
-	headlights.position = Vector3(0, 0.76, -2.12)
+	headlights.position = Vector3(0, 1.02, -2.18)
 	headlights.light_color = Color("b5ddff")
 	headlights.light_energy = 3.5
 	headlights.spot_range = 42.0
@@ -60,26 +72,45 @@ func _ready() -> void:
 
 func _build_visual() -> void:
 	visual = CarVisual.new()
-	visual.name = "CoupeVisual"
+	visual.name = "WhiteTRoc2022Visual"
+	visual.appearance = appearance
+	if appearance == 1:
+		visual.name = "RedRivalVisual"
+	visual.body_model = body_model
+	visual.wheel_model = wheel_model
+	visual.body_model_scale = body_model_scale
+	visual.body_model_offset = body_model_offset
+	visual.body_model_rotation_degrees = body_model_rotation_degrees
+	visual.wheel_model_scale = wheel_model_scale
 	add_child(visual)
 
 func _physics_process(delta: float) -> void:
+	_read_controls(delta)
+	_update_vehicle_feedback(delta)
+
+func set_drive_input(gas: float, braking: float, steering: float, drift: bool = false) -> void:
+	_drive_command = Vector3(clampf(gas, 0.0, 1.0), clampf(braking, 0.0, 1.0), clampf(steering, -1.0, 1.0))
+	_drift_command = drift
+
+func _read_controls(delta: float) -> void:
 	if controls_enabled:
-		throttle = Input.get_action_strength("accelerate")
-		brake = Input.get_action_strength("brake")
-		handbrake = Input.is_action_pressed("handbrake")
-		var input_steer := Input.get_axis("steer_right", "steer_left")
+		throttle = _drive_command.x if external_driver else Input.get_action_strength("accelerate")
+		brake = _drive_command.y if external_driver else Input.get_action_strength("brake")
+		handbrake = _drift_command if external_driver else Input.is_action_pressed("handbrake")
+		var input_steer := _drive_command.z if external_driver else Input.get_axis("steer_right", "steer_left")
 		var speed_ratio := clampf(speed_kmh / tuning.max_speed_kmh, 0.0, 1.0)
 		var steering_scale := lerpf(1.0, tuning.high_speed_steering_scale, speed_ratio)
 		var response := tuning.steering_return_speed if is_zero_approx(input_steer) else lerpf(tuning.steering_response, 3.7, speed_ratio)
 		steer = move_toward(steer, input_steer * steering_scale, response * delta)
-		if Input.is_action_just_pressed("recover"):
+		if not external_driver and Input.is_action_just_pressed("recover"):
 			recovery_requested.emit()
 	else:
 		throttle = 0.0
 		brake = 0.0
 		handbrake = false
 		steer = move_toward(steer, 0.0, delta * 5.0)
+
+func _update_vehicle_feedback(delta: float) -> void:
 	var query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 0.6, global_position - Vector3.UP * 0.25, 1, [get_rid()])
 	grounded = not get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 	var wants_drift := handbrake and grounded and speed_kmh > 15.0
@@ -170,5 +201,6 @@ func park_at(ground: Transform3D) -> void:
 	throttle = 0.0
 	brake = 0.0
 	handbrake = false
+	set_drive_input(0, 0, 0)
 	_reset_feedback()
 	visual.update_motion(Vector3.ZERO, 0.0, 0.0, false, 0.0)

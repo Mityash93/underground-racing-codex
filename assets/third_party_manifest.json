@@ -1,0 +1,39 @@
+{
+  "retrieved": "2026-11-12",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "files": [
+    {
+      "path": "assets/textures/polyhaven/asphalt_02/asphalt_02_diff_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "author": "Rob Tuytel",
+      "bytes": 731707,
+      "sha256": "1aa5ce99f58a625c71d48cfc3e68b65ca85ccb00f39e045c0a928608a0ea25ed"
+    },
+    {
+      "path": "assets/textures/polyhaven/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "author": "Rob Tuytel",
+      "bytes": 1240122,
+      "sha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3"
+    },
+    {
+      "path": "assets/textures/polyhaven/asphalt_02/asphalt_02_rough_1k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "author": "Rob Tuytel",
+      "bytes": 544032,
+      "sha256": "70ba3edc65525eb4dc366cf010ca7ae0bd34e0251ff0225c2dad627a873d0712"
+    },
+    {
+      "path": "assets/environment/polyhaven/cobblestone_street_night_1k.hdr",
+      "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/cobblestone_street_night_1k.hdr",
+      "source": "https://polyhaven.com/a/cobblestone_street_night",
+      "author": "Greg Zaal",
+      "bytes": 1760191,
+      "sha256": "d12d245f4202d9fafe426c2b100f10e9a64981023ed762b24ec568c29289a326"
+    }
+  ]
+}

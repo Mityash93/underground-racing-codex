@@ -20,6 +20,8 @@ func _run() -> void:
 	for i in 4:
 		await process_frame
 	var music: MusicManager = main.music
+	# Explicitly test the bundled track even when this computer has a private startup selection.
+	music.use_default_track()
 	check(music.player.stream is AudioStreamWAV and music.player.stream.get_length() > 58.0, "original 58-second music asset loads")
 	check(music.player.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD and music.player.stream.loop_end > 1200000, "bundled music loops across full arrangement")
 	check(InputMap.has_action("mute_music"), "N music action exists")

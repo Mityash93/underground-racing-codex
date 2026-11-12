@@ -7,6 +7,7 @@ var car: ArcadeCar
 var muted := false
 var current_gear := 1
 var engine_rpm := 900.0
+var volume_trim_db := 0.0
 var _shift_cooldown := 0.0
 var _load_layer: AudioStreamPlayer
 
@@ -65,8 +66,8 @@ func update_engine(speed_kmh: float, throttle: float, driving: bool, delta: floa
 	_load_layer.pitch_scale = pitch_scale
 	var audible := driving and not muted
 	var shift_cut := 5.0 if _shift_cooldown > 0.10 else 0.0
-	var idle_db := -29.0 - shift_cut if audible else -80.0
-	var load_db := -38.0 + throttle * 15.0 - shift_cut if audible else -80.0
+	var idle_db := maxf(-80.0, -29.0 - shift_cut + volume_trim_db) if audible else -80.0
+	var load_db := maxf(-80.0, -38.0 + throttle * 15.0 - shift_cut + volume_trim_db) if audible else -80.0
 	volume_db = lerpf(volume_db, idle_db, 1.0 - exp(-10.0 * delta))
 	_load_layer.volume_db = lerpf(_load_layer.volume_db, load_db, 1.0 - exp(-10.0 * delta))
 
