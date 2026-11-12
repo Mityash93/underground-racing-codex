@@ -18,3 +18,10 @@ extends Resource
 @export var low_speed_yaw_rate: float = 1.45
 @export var high_speed_yaw_rate: float = 0.68
 @export var stabilization: float = 18.0
+
+@export_group("Нитро")
+@export var nitro_acceleration := 6.0
+@export var nitro_extra_speed_kmh := 30.0
+@export var nitro_duration := 4.5
+@export var nitro_recharge_delay := 1.8
+@export var nitro_recharge_rate := 0.10

@@ -9,6 +9,8 @@ extends Node3D
 var in_menu := true
 var _orbit := 0.4
 var _gate_marker: Node3D
+var records := RaceRecords.new()
+var difficulty := RivalDriver.Difficulty.MEDIUM
 var music: MusicManager
 
 func _ready() -> void:
@@ -37,13 +39,14 @@ func _ready() -> void:
 	ui.minimap.track = track
 	ui.minimap.car = car
 	ui.minimap.race = race
+	ui.difficulty_changed.connect(set_difficulty)
 	ui.start_requested.connect(start_race)
 	ui.restart_requested.connect(start_race)
 	ui.pause_requested.connect(toggle_pause)
 	ui.resume_requested.connect(toggle_pause)
 	ui.menu_requested.connect(show_menu)
 	car.recovery_requested.connect(race.recover)
-	race.race_finished.connect(func(): ui.show_results(race))
+	race.race_finished.connect(_on_race_finished)
 	race.checkpoint_passed.connect(_update_gate_marker)
 	_build_gate_marker()
 	show_menu()
@@ -79,10 +82,24 @@ func _build_environment() -> void:
 	moon.directional_shadow_max_distance = 150.0
 	add_child(moon)
 
+func set_difficulty(level: int) -> void:
+	if not in_menu:
+		return
+	difficulty = clampi(level, 0, 2)
+	ui.difficulty_select.select(difficulty)
+	(rival.get_node("Driver") as RivalDriver).set_difficulty(difficulty)
+	records.select_event(difficulty, race.total_laps)
+	ui.set_record(records)
+
+func _on_race_finished() -> void:
+	records.record_finish(race)
+	ui.show_results(race, records)
+
 func start_race() -> void:
 	get_tree().paused = false
 	in_menu = false
 	camera.set_physics_process(true)
+	records.select_event(difficulty, race.total_laps)
 	race.start_race()
 	camera.reset_camera()
 	ui.show_race()
@@ -99,6 +116,7 @@ func show_menu() -> void:
 	car.park_at(track.grid_transform())
 	camera.set_physics_process(false)
 	ui.show_menu()
+	set_difficulty(difficulty)
 	_gate_marker.hide()
 
 func toggle_pause() -> void:

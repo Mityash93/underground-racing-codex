@@ -17,6 +17,10 @@ func ticks(n: int) -> void:
 func _run() -> void:
 	var main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	main.records.path = "res://tests/artifacts/ignored_records.cfg"
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--difficulty="):
+			main.set_difficulty(int(argument.get_slice("=", 1)))
 	await ticks(3)
 	var rival: ArcadeCar = main.rival
 	var race: RaceManager = main.race

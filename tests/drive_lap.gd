@@ -8,6 +8,7 @@ func _initialize() -> void:
 func _run() -> void:
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	main.records.path = "res://tests/artifacts/ignored_records.cfg"
 	main.race.rival_enabled = false
 	main.start_race()
 	for i in 190:

@@ -16,7 +16,9 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 func _map(point: Vector3) -> Vector2:
-	return Vector2(point.x, point.z) * 0.38 + size / 2.0
+	var available := size - Vector2(36, 36)
+	var scale_factor := minf(available.x / track.map_bounds.size.x, available.y / track.map_bounds.size.y)
+	return (Vector2(point.x, point.z) - track.map_bounds.get_center()) * scale_factor + size / 2.0
 
 func _draw() -> void:
 	if not is_instance_valid(track):

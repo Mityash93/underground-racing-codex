@@ -22,9 +22,10 @@ func ticks(count: int) -> void:
 func _run() -> void:
 	var main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	main.records.path = "res://tests/artifacts/ignored_records.cfg"
 	await ticks(3)
 	check(main.in_menu and main.ui.menu.visible, "main scene opens in menu")
-	check(main.track.points.size() == 192 and main.track.track_length > 1200, "closed city circuit > 1.2 km")
+	check(main.track.points.size() == TrackLayout.ANCHORS.size() * CityTrack.SAMPLES_PER_CORNER and main.track.track_length > 2400, "new closed circuit > 2.4 km")
 	check(main.track.checkpoints.size() == 12, "12 sequential checkpoint transforms")
 	check(main.car.freeze and not main.car.controls_enabled, "car cannot drive through menu")
 	check(is_equal_approx(main.car.position.y + CarVisual.WHEEL_Y - WheelVisual.RADIUS, 0.018), "parked tires touch asphalt instead of floating")

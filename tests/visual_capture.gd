@@ -18,6 +18,7 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute("res://tests/artifacts")
 	var main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	main.records.path = "res://tests/artifacts/ignored_records.cfg"
 	await wait_frames(90)
 	await capture("menu.png")
 	main.start_race()

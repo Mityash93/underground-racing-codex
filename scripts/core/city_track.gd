@@ -9,6 +9,7 @@ var points := PackedVector3Array()
 var distances := PackedFloat32Array()
 var track_length := 0.0
 var checkpoints: Array[Transform3D] = []
+var map_bounds := Rect2()
 var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -19,12 +20,14 @@ func _ready() -> void:
 	CityDetails.build(self, points)
 	_build_city()
 	_build_start()
+	CityDistricts.build(self)
 
 func _build_path() -> void:
-	var anchors := PackedVector3Array([
-		Vector3(0, 0, 180), Vector3(-155, 0, 170), Vector3(-235, 0, 65),
-		Vector3(-205, 0, -95), Vector3(-75, 0, -175), Vector3(110, 0, -160),
-		Vector3(225, 0, -45), Vector3(205, 0, 95)])
+	points.clear()
+	distances.clear()
+	checkpoints.clear()
+	track_length = 0.0
+	var anchors := PackedVector3Array(TrackLayout.ANCHORS)
 	for i in anchors.size():
 		for j in SAMPLES_PER_CORNER:
 			var t := float(j) / SAMPLES_PER_CORNER
@@ -37,8 +40,34 @@ func _build_path() -> void:
 	for i in points.size():
 		track_length += points[i].distance_to(points[(i + 1) % points.size()])
 		distances.append(track_length)
+	map_bounds = Rect2(Vector2(points[0].x, points[0].z), Vector2.ZERO)
+	for point in points:
+		map_bounds = map_bounds.expand(Vector2(point.x, point.z))
 	for i in CHECKPOINT_COUNT:
 		checkpoints.append(transform_at(track_length * i / CHECKPOINT_COUNT))
+
+func district_at(distance: float) -> int:
+	var wrapped := fposmod(distance, track_length)
+	if wrapped >= anchor_distance(4) and wrapped < anchor_distance(9):
+		return 1
+	if wrapped >= anchor_distance(9) and wrapped < anchor_distance(14):
+		return 2
+	return 0
+
+func anchor_distance(index: int) -> float:
+	return distances[index * SAMPLES_PER_CORNER]
+
+func in_tunnel(distance: float) -> bool:
+	var wrapped := fposmod(distance, track_length)
+	return wrapped >= TrackLayout.TUNNEL_START and wrapped <= TrackLayout.TUNNEL_END
+
+func section_name(distance: float) -> String:
+	if in_tunnel(distance):
+		return "ТОННЕЛЬ «ИМПУЛЬС»"
+	var wrapped := fposmod(distance, track_length)
+	if wrapped >= anchor_distance(7) and wrapped < anchor_distance(9):
+		return "СВЯЗКА «ВОЛНА»"
+	return TrackLayout.NAMES[district_at(distance)]
 
 func transform_at(distance: float) -> Transform3D:
 	var wrapped := fposmod(distance, track_length)
@@ -114,12 +143,12 @@ func _build_streetscape() -> void:
 			markings.append(GameGeometry.box_transform(center + side * sign_side * 10.8 + Vector3.UP * 0.038, Vector3(0.13, 0.025, length + 0.05), yaw))
 		if i % 2 == 0:
 			markings.append(GameGeometry.box_transform(center + Vector3.UP * 0.04, Vector3(0.16, 0.025, length * 0.58), yaw))
-		if i % 6 == 0:
+		if i % 6 == 0 and not in_tunnel(distances[i]):
 			var lamp_at := p + side * 14.4
 			poles.append(GameGeometry.box_transform(lamp_at + Vector3.UP * 5.2, Vector3(0.18, 10.4, 0.18)))
 			poles.append(GameGeometry.box_transform(lamp_at - side * 1.7 + Vector3.UP * 10.3, Vector3(3.6, 0.14, 0.18), yaw))
 			lamps.append(GameGeometry.box_transform(lamp_at - side * 3.2 + Vector3.UP * 10.15, Vector3(1.0, 0.12, 0.7), yaw))
-			if i % 18 == 0:
+			if i % 36 == 0:
 				var light := OmniLight3D.new()
 				light.position = lamp_at - side * 3.5 + Vector3.UP * 8.7
 				light.light_color = Color("a9cfff")
@@ -144,16 +173,24 @@ func _build_city() -> void:
 	var equipment: Array[Transform3D] = []
 	var windows: Array[Transform3D] = []
 	var rooftops: Array[Transform3D] = []
-	for i in range(0, points.size(), 4):
+	for i in range(0, points.size(), 8):
 		var direction := (points[(i + 1) % points.size()] - points[i]).normalized()
 		var side := direction.cross(Vector3.UP)
 		var yaw := atan2(-direction.x, -direction.z)
+		var district := district_at(distances[i])
 		for side_sign in [-1.0, 1.0]:
+			if district == 2 and side_sign < 0:
+				continue
 			var height := _rng.randf_range(14, 65)
 			var width := _rng.randf_range(12, 22)
+			if district == 1:
+				height = _rng.randf_range(7, 16)
+				width = _rng.randf_range(20, 30)
+			elif district == 2:
+				height = _rng.randf_range(13, 27)
 			var at: Vector3 = points[i] + side * side_sign * _rng.randf_range(36, 48)
 			var tower := GameGeometry.box_transform(at + Vector3.UP * height / 2.0, Vector3(width, height, 17), yaw)
-			var variant := (int(i / 4) + int(side_sign)) % 3
+			var variant := 1 if district == 1 else posmod(int(i / 8) + int(side_sign), 3)
 			if variant == 0:
 				towers.append(tower)
 			elif variant == 1:

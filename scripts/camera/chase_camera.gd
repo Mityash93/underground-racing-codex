@@ -51,4 +51,4 @@ func _physics_process(delta: float) -> void:
 		desired = focus.lerp(desired, maxf(0.0, fractions[0] - 0.015))
 	global_position = desired
 	look_at(focus + _heading * (3.0 + ratio * 3.0), Vector3.UP)
-	fov = lerpf(fov, 66.0 + ratio * 16.0, 1.0 - exp(-3.0 * delta))
+	fov = lerpf(fov, 66.0 + ratio * 16.0 + target.nitro.blend * 8.0, 1.0 - exp(-3.0 * delta))

@@ -5,6 +5,14 @@ extends Node
 @export var max_speed_kmh := 165.0
 @export var corner_acceleration := 21.0
 @export var preferred_lane := 3.2
+enum Difficulty { EASY, MEDIUM, HARD }
+var difficulty := Difficulty.MEDIUM
+
+func set_difficulty(level: int) -> void:
+	difficulty = clampi(level, Difficulty.EASY, Difficulty.HARD)
+	max_speed_kmh = [125.0, 165.0, 190.0][difficulty]
+	corner_acceleration = [14.0, 21.0, 22.0][difficulty]
+
 var car: ArcadeCar
 var track: CityTrack
 var other_car: ArcadeCar

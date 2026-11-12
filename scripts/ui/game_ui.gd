@@ -9,6 +9,7 @@ signal menu_requested
 signal music_toggled(enabled: bool)
 signal music_volume_changed(volume: float)
 signal custom_music_requested
+signal difficulty_changed(level: int)
 signal default_music_requested
 
 const ORANGE := Color("ff774d")
@@ -25,6 +26,10 @@ var place: Label
 var result_title: Label
 var results_text: Label
 var minimap: RaceMinimap
+var difficulty_select: OptionButton
+var record_label: Label
+var nitro_bar: ProgressBar
+var nitro_label: Label
 var _speed_bar: ProgressBar
 var _fps: Label
 var _gear: Label
@@ -62,8 +67,15 @@ func _ready() -> void:
 	_label(menu_box, "УЛИЧНЫЕ\nЛЕГЕНДЫ", 88, Color.WHITE)
 	_label(menu_box, "Город — твоя стартовая решётка.", 22, ORANGE)
 	_space(menu_box, 24)
-	_label(menu_box, "НЕОНОВЫЙ РАЙОН / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ДУЭЛЬ С AI «ВЕКТОР»", 24, Color("adc1d3"))
-	_space(menu_box, 24)
+	_label(menu_box, "НЕОНОВОЕ КОЛЬЦО / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ДУЭЛЬ С AI «ВЕКТОР»", 24, Color("adc1d3"))
+	difficulty_select = OptionButton.new()
+	for title in ["СОПЕРНИК: ЛЁГКИЙ", "СОПЕРНИК: СРЕДНИЙ", "СОПЕРНИК: СЛОЖНЫЙ"]:
+		difficulty_select.add_item(title)
+	difficulty_select.select(1)
+	difficulty_select.custom_minimum_size.y = 48
+	difficulty_select.item_selected.connect(func(level: int): difficulty_changed.emit(level))
+	menu_box.add_child(difficulty_select)
+	record_label = _label(menu_box, "РЕКОРД: --:--.---", 20, CYAN)
 	_button(menu_box, "НАЧАТЬ ЗАЕЗД   →", func(): start_requested.emit())
 	_button(menu_box, "ВЫХОД", func(): get_tree().quit())
 	_label(menu_box, "WASD / СТРЕЛКИ · ПРОБЕЛ — ЗАНОС", 19, Color("9bb1c3"))
@@ -94,7 +106,7 @@ func _ready() -> void:
 	speed_card.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	speed_card.offset_left = -400
 	speed_card.offset_right = -52
-	speed_card.offset_top = -238
+	speed_card.offset_top = -308
 	speed_card.offset_bottom = -48
 	var speed_box := VBoxContainer.new()
 	speed_card.add_child(speed_box)
@@ -105,6 +117,17 @@ func _ready() -> void:
 	_speed_bar.max_value = 225.0
 	_speed_bar.show_percentage = false
 	speed_box.add_child(_speed_bar)
+	nitro_label = _label(speed_box, "SHIFT · НИТРО 100%", 18, CYAN)
+	nitro_bar = ProgressBar.new()
+	nitro_bar.custom_minimum_size = Vector2(290, 12)
+	nitro_bar.show_percentage = false
+	nitro_bar.max_value = 1.0
+	nitro_bar.value = 1.0
+	var nitro_fill := StyleBoxFlat.new()
+	nitro_fill.bg_color = CYAN
+	nitro_fill.set_corner_radius_all(4)
+	nitro_bar.add_theme_stylebox_override("fill", nitro_fill)
+	speed_box.add_child(nitro_bar)
 	minimap = RaceMinimap.new()
 	hud.add_child(minimap)
 	minimap.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
@@ -112,7 +135,7 @@ func _ready() -> void:
 	minimap.offset_right = 330
 	minimap.offset_top = -275
 	minimap.offset_bottom = -55
-	var help := _label(hud, "WASD / СТРЕЛКИ — УПРАВЛЕНИЕ · ПРОБЕЛ — ЗАНОС · R — ВОЗВРАТ (+5 с)\nC — КАМЕРА · M — МОТОР · N — МУЗЫКА · ESC — ПАУЗА", 16, Color("aac1d2"))
+	var help := _label(hud, "WASD / СТРЕЛКИ — УПРАВЛЕНИЕ · ПРОБЕЛ — ЗАНОС · R — ВОЗВРАТ (+5 с)\nSHIFT — НИТРО · C — КАМЕРА · M — МОТОР · N — МУЗЫКА · ESC — ПАУЗА", 16, Color("aac1d2"))
 	help.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	help.offset_left = -650
 	help.offset_top = -50
@@ -209,12 +232,15 @@ func update_race(car: ArcadeCar, race: RaceManager) -> void:
 	var reverse := car.linear_velocity.dot(-car.global_basis.z) < -0.6
 	_gear.text = "КМ/Ч     /     %s" % ("ЗАДНИЙ ХОД" if reverse else "ПЕРЕДАЧА %d" % car.engine.current_gear)
 	speed.text = "%03d" % roundi(car.speed_kmh)
+	_speed_bar.max_value = car.tuning.max_speed_kmh + car.tuning.nitro_extra_speed_kmh
 	_speed_bar.value = car.speed_kmh
+	nitro_bar.value = car.nitro.charge
+	nitro_label.text = "НИТРО!  %d%%" % roundi(car.nitro.charge * 100) if car.nitro.active else ("ОТПУСТИ SHIFT · ПЕРЕЗАРЯДКА" if car.nitro.exhausted else "SHIFT · НИТРО %d%%" % roundi(car.nitro.charge * 100))
 	stats.text = "КРУГ  %d / %d      %s" % [race.lap, race.total_laps, RaceManager.format_time(race.elapsed)]
 	status.text = "ВОРОТА %02d / %02d   /   КРУГ %s" % [race.next_checkpoint if race.next_checkpoint > 0 else 12, 12, RaceManager.format_time(race.lap_time)]
 	var gap := race.rival_gap_meters()
 	place.text = "МЕСТО %d / 2 · ВЕКТОР %s %d м" % [race.player_position(), "ПОЗАДИ" if gap >= 0 else "ВПЕРЕДИ", roundi(absf(gap))] if race.is_duel() else "ЗАЕЗД НА ВРЕМЯ"
-	_fps.text = "%d кадр/с  /  %s" % [Engine.get_frames_per_second(), "ЗАНОС" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else "НЕОНОВЫЙ РАЙОН"]
+	_fps.text = "%d кадр/с  /  %s" % [Engine.get_frames_per_second(), "ЗАНОС" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else race.track.section_name(race.track.nearest_distance(car.global_position))]
 	countdown_label.text = str(ceili(race.countdown)) if race.state == RaceManager.State.COUNTDOWN else ("СТАРТ!" if race.state == RaceManager.State.RUNNING and race.elapsed < 0.85 else "")
 
 func show_menu() -> void:
@@ -229,9 +255,17 @@ func show_race() -> void:
 	pause_panel.hide()
 	results.hide()
 
-func show_results(race: RaceManager) -> void:
+func set_record(records: RaceRecords) -> void:
+	record_label.text = "РЕКОРД ЗАЕЗДА: " + RaceManager.format_time(records.best_time)
+
+func show_results(race: RaceManager, records: RaceRecords = null) -> void:
 	result_title.text = ("ПОБЕДА!" if race.winner == "player" else "ВЕКТОР ПОБЕДИЛ") if race.is_duel() else "ФИНИШ!"
 	results_text.text = "ОБЩЕЕ ВРЕМЯ    %s\nЛУЧШИЙ КРУГ    %s\n\nКРУГ 1    %s\nКРУГ 2    %s\nВОЗВРАТОВ: %d  (штраф +5 с включён)" % [RaceManager.format_time(race.elapsed), RaceManager.format_time(race.best_lap), RaceManager.format_time(race.lap_times[0] if race.lap_times.size() > 0 else INF), RaceManager.format_time(race.lap_times[1] if race.lap_times.size() > 1 else INF), race.recoveries]
+	if records != null:
+		var headline := "НОВЫЙ РЕКОРД!" if records.new_record else "ЛИЧНЫЙ РЕКОРД"
+		results_text.text += "\n%s  %s" % [headline, RaceManager.format_time(records.best_time)]
+		if records.save_failed:
+			results_text.text += "\nНе удалось сохранить рекорд на диск."
 	results.show()
 
 func _layer(parent: Node) -> Control:

@@ -53,6 +53,8 @@ static func _turn_boards(parent: Node3D, points: PackedVector3Array) -> void:
 		var direction := (points[(i + 1) % points.size()] - points[i]).normalized()
 		var future := (points[(i + 13) % points.size()] - points[(i + 12) % points.size()]).normalized()
 		var turn := direction.signed_angle_to(future, Vector3.UP)
+		if absf(turn) < 0.12:
+			continue
 		var right := direction.cross(Vector3.UP)
 		var outside := 1.0 if turn > 0.0 else -1.0
 		var yaw := atan2(-direction.x, -direction.z)

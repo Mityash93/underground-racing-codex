@@ -22,6 +22,8 @@ var handbrake := false
 var grounded := false
 var drift_blend := 0.0
 var slip_angle := 0.0
+var nitro := NitroSystem.new()
+var tire_effects: TireEffects
 var engine: EngineAudio
 var speed_kmh: float:
 	get: return Vector2(linear_velocity.x, linear_velocity.z).length() * 3.6
@@ -58,6 +60,9 @@ func _ready() -> void:
 	shape.position.y = 0.60
 	add_child(shape)
 	_build_visual()
+	tire_effects = TireEffects.new()
+	tire_effects.name = "TireEffects"
+	add_child(tire_effects)
 	engine = EngineAudio.new()
 	engine.car = self
 	add_child(engine)
@@ -87,6 +92,9 @@ func _build_visual() -> void:
 func _physics_process(delta: float) -> void:
 	_read_controls(delta)
 	_update_vehicle_feedback(delta)
+	var wanted := not external_driver and Input.is_action_pressed("nitro")
+	var eligible := grounded and throttle > 0.1 and brake < 0.1 and not handbrake and linear_velocity.dot(-global_basis.z) > 2.8
+	nitro.update(delta, wanted, eligible, controls_enabled and not freeze, tuning)
 
 func set_drive_input(gas: float, braking: float, steering: float, drift: bool = false) -> void:
 	_drive_command = Vector3(clampf(gas, 0.0, 1.0), clampf(braking, 0.0, 1.0), clampf(steering, -1.0, 1.0))
@@ -154,7 +162,11 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 				acceleration -= tuning.brake_deceleration * brake
 			elif speed > -tuning.reverse_speed_kmh / 3.6:
 				acceleration -= tuning.engine_acceleration * 0.58 * brake
-		if speed >= tuning.max_speed_kmh / 3.6 and acceleration > 0.0:
+		var speed_limit := tuning.max_speed_kmh
+		if nitro.active and controls_enabled:
+			acceleration += tuning.nitro_acceleration * nitro.blend
+			speed_limit += tuning.nitro_extra_speed_kmh
+		if speed >= speed_limit / 3.6 and acceleration > 0.0:
 			acceleration = 0.0
 		if handbrake:
 			acceleration -= signf(speed) * minf(absf(speed) / state.step, tuning.handbrake_deceleration)
@@ -177,6 +189,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 func recover_to(at: Transform3D) -> void:
 	_recovery_transform = at
 	_reset_pending = true
+	nitro.stop()
+	tire_effects.break_trail()
 	steer = 0.0
 	_upside_down_time = 0.0
 
@@ -202,5 +216,7 @@ func park_at(ground: Transform3D) -> void:
 	brake = 0.0
 	handbrake = false
 	set_drive_input(0, 0, 0)
+	nitro.reset()
+	tire_effects.clear()
 	_reset_feedback()
 	visual.update_motion(Vector3.ZERO, 0.0, 0.0, false, 0.0)
