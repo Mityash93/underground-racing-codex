@@ -1,13 +1,23 @@
 extends SceneTree
 ## Real Metal views, followed by a physical full-lap render profile using keyboard actions.
 var main
+var label := "city_after"
+var started_at := Time.get_ticks_msec()
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--label="):
+			label = arg.get_slice("=", 1)
 	_run.call_deferred()
+func _process(_delta: float) -> bool:
+	if Time.get_ticks_msec() - started_at > 210000:
+		push_error("Full-lap render check exceeded wall time limit")
+		quit(1)
+	return false
 func capture(title: String) -> void:
 	for i in 5:
 		await process_frame
 	RenderingServer.force_draw(false)
-	root.get_texture().get_image().save_png("res://tests/artifacts/track_" + title + ".png")
+	root.get_texture().get_image().save_png("res://tests/artifacts/track_" + label + "_" + title + ".png")
 	print("CAPTURE: track_", title)
 func park(distance: float) -> void:
 	var pose: Transform3D = main.track.transform_at(distance)
@@ -18,6 +28,7 @@ func viewpoint(offset: Vector3, focus: Vector3) -> void:
 	main.camera.look_at(main.car.global_position + main.car.global_basis * focus)
 	main.camera.fov = 65.0
 func _run() -> void:
+	root.grab_focus()
 	DirAccess.make_dir_recursive_absolute("res://tests/artifacts")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -44,6 +55,15 @@ func _run() -> void:
 	park(main.track.anchor_distance(11))
 	viewpoint(Vector3(10, 7, 20), Vector3(-25, 3, -40))
 	await capture("waterfront")
+	park(380)
+	viewpoint(Vector3(2, 3.1, 8), Vector3(0, 3.5, -30))
+	await capture("boulevard")
+	park(main.track.anchor_distance(8))
+	viewpoint(Vector3(1, 3.1, 8), Vector3(0, 3, -32))
+	await capture("wave_street")
+	park(main.track.anchor_distance(12))
+	viewpoint(Vector3(1, 3.1, 8), Vector3(0, 3, -32))
+	await capture("harbor_street")
 	if "--views-only" in OS.get_cmdline_user_args():
 		main.queue_free()
 		await process_frame
@@ -95,7 +115,7 @@ func _run() -> void:
 		report += TrackLayout.NAMES[i] + ": " + summarize(sectors[i]) + "\n"
 	report += "Single automated run; not a guarantee for all races, devices or displays.\n"
 	print(report)
-	FileAccess.open("res://tests/artifacts/track_full_lap_performance.txt", FileAccess.WRITE).store_string(report)
+	FileAccess.open("res://tests/artifacts/track_" + label + "_performance.txt", FileAccess.WRITE).store_string(report)
 	await capture("finish")
 	main.queue_free()
 	await process_frame

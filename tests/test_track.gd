@@ -77,10 +77,17 @@ func _run() -> void:
 		instances += batch.multimesh.instance_count
 	print("STREET ART: %d batched groups, %d instances" % [batches.size(), instances])
 	check(batches.size() <= 20 and instances <= 2600, "detailed street stays within instance/draw-group budget")
+	var city := track.get_node("CityArchitecture")
+	var district_counts: Array = city.get_meta("district_counts")
+	print("CITY ART: %s frontages; %d groups; %d instances; %d skyline towers" % [district_counts,
+		city.get_meta("batch_count"), city.get_meta("instance_count"), city.get_node("DistantSkyline").get_meta("tower_count")])
+	check(district_counts.all(func(count): return count >= 8), "detailed architecture extends through all three districts")
+	check(city.get_meta("batch_count") <= 260 and city.get_meta("instance_count") <= 45000, "whole-city detail is spatially batched within geometry budget")
+	check(city.get_node("DistantSkyline").get_meta("tower_count") >= 6 and track.has_node("RoadDress/LaneArrows"), "skyline and road dressing exist beyond first street")
 	var camera_clear := true
 	var camera_shape := SphereShape3D.new()
 	camera_shape.radius = 0.3
-	for d in range(-100, 301, 5):
+	for d in range(-100, int(track.track_length), 5):
 		var road := track.transform_at(d)
 		for lane in [-3.2, 3.2]:
 			var focus: Vector3 = road.origin + road.basis.x * lane + Vector3.UP * 1.15
@@ -90,7 +97,7 @@ func _run() -> void:
 			camera_cast.motion = road.basis.z * 8.7 + Vector3.UP * 2.5
 			camera_cast.exclude = exclusions
 			camera_clear = camera_clear and space.cast_motion(camera_cast)[0] >= 0.999
-	check(camera_clear, "chase camera volume clears detailed street, new portal and tunnel")
+	check(camera_clear, "chase camera volume clears buildings, portals and tunnel around full circuit")
 	var all_inside := true
 	for point in track.points:
 		var on_map: Vector2 = main.ui.minimap._map(point)
