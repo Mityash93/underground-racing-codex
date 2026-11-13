@@ -67,9 +67,30 @@ func _run() -> void:
 	check(space.intersect_ray(camera_query).is_empty(), "default chase camera fits inside tunnel")
 	check(track.has_node("ImpulseTunnel") and track.has_node("IskraWorks") and track.has_node("FreightYard") and track.has_node("NorthHarborWater") and track.has_node("HarborBeacon"), "district landmark geometry exists")
 	var lights := track.find_children("*", "OmniLight3D", true, false)
-	check(lights.size() <= 14, "local track light budget stays at 14 without added shadows")
+	check(lights.size() <= 16, "local track light budget stays at 16 without added shadows")
 	for light in lights:
 		check(not light.shadow_enabled, "district point light has no shadow")
+	var showcase := track.get_node("StartBoulevard")
+	var batches := showcase.find_children("*", "MultiMeshInstance3D", true, false)
+	var instances := 0
+	for batch in batches:
+		instances += batch.multimesh.instance_count
+	print("STREET ART: %d batched groups, %d instances" % [batches.size(), instances])
+	check(batches.size() <= 20 and instances <= 2600, "detailed street stays within instance/draw-group budget")
+	var camera_clear := true
+	var camera_shape := SphereShape3D.new()
+	camera_shape.radius = 0.3
+	for d in range(-100, 301, 5):
+		var road := track.transform_at(d)
+		for lane in [-3.2, 3.2]:
+			var focus: Vector3 = road.origin + road.basis.x * lane + Vector3.UP * 1.15
+			var camera_cast := PhysicsShapeQueryParameters3D.new()
+			camera_cast.shape = camera_shape
+			camera_cast.transform = Transform3D(Basis.IDENTITY, focus)
+			camera_cast.motion = road.basis.z * 8.7 + Vector3.UP * 2.5
+			camera_cast.exclude = exclusions
+			camera_clear = camera_clear and space.cast_motion(camera_cast)[0] >= 0.999
+	check(camera_clear, "chase camera volume clears detailed street, new portal and tunnel")
 	var all_inside := true
 	for point in track.points:
 		var on_map: Vector2 = main.ui.minimap._map(point)

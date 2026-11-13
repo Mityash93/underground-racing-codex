@@ -33,7 +33,7 @@ static func _label(parent: Node3D, words: String, at: Vector3, color: Color, pix
 static func _tunnel(track: CityTrack) -> void:
 	var length := TrackLayout.TUNNEL_END - TrackLayout.TUNNEL_START
 	var tunnel := _root(track, "ImpulseTunnel", TrackLayout.TUNNEL_START)
-	var shell := GameGeometry.material(Color("293341"))
+	var shell := StreetShowcase.concrete_material()
 	var dark := GameGeometry.material(Color("101d2a"))
 	var warm := GameGeometry.material(Color("ffc37d"), 1.5)
 	var cyan := GameGeometry.material(Color("39dcea"), 1.7)

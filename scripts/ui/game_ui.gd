@@ -135,7 +135,7 @@ func _ready() -> void:
 	minimap.offset_right = 330
 	minimap.offset_top = -275
 	minimap.offset_bottom = -55
-	var help := _label(hud, "WASD / СТРЕЛКИ — УПРАВЛЕНИЕ · ПРОБЕЛ — ЗАНОС · R — ВОЗВРАТ (+5 с)\nSHIFT — НИТРО · C — КАМЕРА · M — МОТОР · N — МУЗЫКА · ESC — ПАУЗА", 16, Color("aac1d2"))
+	var help := _label(hud, "WASD / СТРЕЛКИ — УПРАВЛЕНИЕ · ПРОБЕЛ — ЗАНОС · R — ВОЗВРАТ (+5 с)\nSHIFT — НИТРО · C — КАМЕРА · M — ЗВУК МАШИН · N — МУЗЫКА · ESC — ПАУЗА", 16, Color("aac1d2"))
 	help.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	help.offset_left = -650
 	help.offset_top = -50

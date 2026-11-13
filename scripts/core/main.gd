@@ -34,6 +34,8 @@ func _ready() -> void:
 	var driver: RivalDriver = rival.get_node("Driver")
 	driver.track = track
 	driver.other_car = car
+	car.sound.track = track
+	rival.sound.track = track
 	rival.engine.volume_trim_db = -14.0
 	ui.minimap.rival = rival
 	ui.minimap.track = track
@@ -67,17 +69,17 @@ func _build_environment() -> void:
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("b2bdcf")
-	environment.ambient_light_energy = 0.52
+	environment.ambient_light_energy = 0.34
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled = true
-	environment.fog_light_color = Color("27334f")
-	environment.fog_density = 0.0018
+	environment.fog_light_color = Color("111d30")
+	environment.fog_density = 0.0012
 	world.environment = environment
 	add_child(world)
 	var moon := DirectionalLight3D.new()
 	moon.rotation_degrees = Vector3(-42, -32, 0)
 	moon.light_color = Color("c2d3e8")
-	moon.light_energy = 1.05
+	moon.light_energy = 0.65
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 150.0
 	add_child(moon)

@@ -6,7 +6,7 @@ func _initialize() -> void:
 func capture(title: String) -> void:
 	for i in 5:
 		await process_frame
-	await RenderingServer.frame_post_draw
+	RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png("res://tests/artifacts/track_" + title + ".png")
 	print("CAPTURE: track_", title)
 func park(distance: float) -> void:

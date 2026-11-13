@@ -21,6 +21,7 @@ func _ready() -> void:
 	_build_city()
 	_build_start()
 	CityDistricts.build(self)
+	StreetShowcase.build(self)
 
 func _build_path() -> void:
 	points.clear()
@@ -139,7 +140,7 @@ func _build_streetscape() -> void:
 			concrete.append(GameGeometry.box_transform(edge + Vector3.UP * 0.48, Vector3(0.8, 0.96, length + 0.18), yaw))
 			GameGeometry.collider(self, Vector3(0.8, 1.1, length + 0.18), edge + Vector3.UP * 0.55, yaw)
 			var strips := cyan if sign_side < 0 else orange
-			strips.append(GameGeometry.box_transform(edge + Vector3.UP * 1.01, Vector3(0.85, 0.055, length), yaw))
+			strips.append(GameGeometry.box_transform(edge + Vector3.UP * 1.01, Vector3(0.12, 0.035, length), yaw))
 			markings.append(GameGeometry.box_transform(center + side * sign_side * 10.8 + Vector3.UP * 0.038, Vector3(0.13, 0.025, length + 0.05), yaw))
 		if i % 2 == 0:
 			markings.append(GameGeometry.box_transform(center + Vector3.UP * 0.04, Vector3(0.16, 0.025, length * 0.58), yaw))
@@ -156,9 +157,9 @@ func _build_streetscape() -> void:
 				light.omni_range = 26.0
 				light.shadow_enabled = false
 				add_child(light)
-	GameGeometry.batch_boxes(self, concrete, GameGeometry.material(Color("3a4657")))
-	GameGeometry.batch_boxes(self, cyan, GameGeometry.material(Color("1fd7eb"), 1.7))
-	GameGeometry.batch_boxes(self, orange, GameGeometry.material(Color("ff673b"), 1.5))
+	GameGeometry.batch_boxes(self, concrete, StreetShowcase.concrete_material())
+	GameGeometry.batch_boxes(self, cyan, GameGeometry.material(Color("1fd7eb"), 0.8))
+	GameGeometry.batch_boxes(self, orange, GameGeometry.material(Color("ff673b"), 0.7))
 	GameGeometry.batch_boxes(self, markings, GameGeometry.material(Color("a1bacb"), 0.12))
 	GameGeometry.batch_boxes(self, poles, GameGeometry.material(Color("27384a")))
 	GameGeometry.batch_boxes(self, lamps, GameGeometry.material(Color("c2e9ff"), 2.2))
@@ -174,6 +175,8 @@ func _build_city() -> void:
 	var windows: Array[Transform3D] = []
 	var rooftops: Array[Transform3D] = []
 	for i in range(0, points.size(), 8):
+		if StreetShowcase.contains_distance(self, distances[i]):
+			continue
 		var direction := (points[(i + 1) % points.size()] - points[i]).normalized()
 		var side := direction.cross(Vector3.UP)
 		var yaw := atan2(-direction.x, -direction.z)
@@ -231,7 +234,7 @@ func _build_city() -> void:
 	GameGeometry.batch_boxes(self, equipment, GameGeometry.material(Color("334453")))
 	GameGeometry.batch_boxes(self, windows, GameGeometry.material(Color("649fb9"), 0.8))
 	GameGeometry.batch_boxes(self, rooftops, GameGeometry.material(Color("236c8c"), 0.5))
-	for i in [12, 48, 84, 120, 156]:
+	for i in [84, 120, 156]:
 		var transform_here := transform_at(distances[i])
 		var billboard := Node3D.new()
 		add_child(billboard)

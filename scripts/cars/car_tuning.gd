@@ -25,3 +25,8 @@ extends Resource
 @export var nitro_duration := 4.5
 @export var nitro_recharge_delay := 1.8
 @export var nitro_recharge_rate := 0.10
+
+@export_group("Звук автомобиля")
+@export_range(-24.0, 6.0, 0.5) var effects_volume_db := 0.0
+@export_range(0.0, 0.6, 0.01) var tunnel_reverb_wet := 0.28
+@export_range(0.5, 10.0, 0.1) var impact_min_speed := 1.8

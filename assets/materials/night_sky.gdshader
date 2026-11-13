@@ -11,8 +11,8 @@ void sky() {
 	} else {
 		// Preserve the original skyline rather than putting a photographed street behind the track.
 		float elevation = pow(clamp(abs(EYEDIR.y), 0.0, 1.0), 0.45);
-		vec3 horizon = vec3(0.037, 0.048, 0.078);
-		vec3 pole = EYEDIR.y >= 0.0 ? vec3(0.003, 0.007, 0.019) : vec3(0.007, 0.012, 0.020);
+		vec3 horizon = vec3(0.006, 0.012, 0.024);
+		vec3 pole = EYEDIR.y >= 0.0 ? vec3(0.001, 0.003, 0.008) : vec3(0.002, 0.005, 0.010);
 		COLOR = mix(horizon, pole, elevation);
 	}
 }

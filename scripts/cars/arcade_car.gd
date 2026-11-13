@@ -24,6 +24,9 @@ var drift_blend := 0.0
 var slip_angle := 0.0
 var nitro := NitroSystem.new()
 var tire_effects: TireEffects
+var sound: VehicleSound
+var _impact_velocity := Vector3.ZERO
+var _wall_contacts: Dictionary = {}
 var engine: EngineAudio
 var speed_kmh: float:
 	get: return Vector2(linear_velocity.x, linear_velocity.z).length() * 3.6
@@ -66,10 +69,13 @@ func _ready() -> void:
 	engine = EngineAudio.new()
 	engine.car = self
 	add_child(engine)
+	sound = VehicleSound.new()
+	sound.name = "VehicleSound"
+	add_child(sound)
 	var headlights := SpotLight3D.new()
 	headlights.position = Vector3(0, 1.02, -2.18)
 	headlights.light_color = Color("b5ddff")
-	headlights.light_energy = 3.5
+	headlights.light_energy = 5.0
 	headlights.spot_range = 42.0
 	headlights.spot_angle = 38.0
 	headlights.shadow_enabled = false
@@ -148,6 +154,29 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 		_reset_pending = false
 		_reset_feedback()
 		return
+	# Previous incoming velocity survives the contact solver's loss of speed on impact.
+	if controls_enabled and not freeze:
+		for collider in _wall_contacts.keys():
+			_wall_contacts[collider] -= state.step
+			if _wall_contacts[collider] <= 0.0:
+				_wall_contacts.erase(collider)
+		var touched: Dictionary = {}
+		var closing_speed := 0.0
+		for i in state.get_contact_count():
+			# Godot reports this normal in world space despite the method name.
+			var normal := state.get_contact_local_normal(i)
+			if absf(normal.y) > 0.65:
+				continue
+			var collider := state.get_contact_collider(i)
+			touched[collider] = true
+			if _wall_contacts.has(collider):
+				continue
+			var relative := _impact_velocity - state.get_contact_collider_velocity_at_position(i)
+			closing_speed = maxf(closing_speed, -relative.dot(normal))
+		for collider in touched:
+			_wall_contacts[collider] = 0.4
+		sound.report_impact(closing_speed)
+	_impact_velocity = state.linear_velocity
 	var forward := -state.transform.basis.z
 	forward.y = 0.0
 	forward = forward.normalized()
@@ -199,6 +228,10 @@ func _reset_feedback() -> void:
 	slip_angle = 0.0
 	_previous_velocity = Vector3.ZERO
 	_filtered_acceleration = Vector3.ZERO
+	_impact_velocity = Vector3.ZERO
+	_wall_contacts.clear()
+	if is_instance_valid(sound):
+		sound.reset_sounds()
 	visual.reset_body_attitude()
 	if is_instance_valid(engine):
 		engine.reset_engine()

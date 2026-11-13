@@ -41,6 +41,10 @@ func _make_loop(loaded: bool) -> AudioStreamWAV:
 	loop.data = samples
 	return loop
 
+func set_output_bus(output: String) -> void:
+	bus = output
+	_load_layer.bus = output
+
 func reset_engine() -> void:
 	current_gear = 1
 	engine_rpm = 900.0
