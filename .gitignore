@@ -9,3 +9,11 @@ assets/audio/local/*
 !assets/audio/local/.gdignore
 
 local_data/
+
+# Sketchfab Standard licensed local art: distribute only embedded in the game.
+assets/cars/golf_gti_2025/*.zip
+assets/cars/golf_gti_2025/prepared/
+
+# Retain reproducible local imports without committing duplicate source archives.
+assets/cars/audi_r8/*.zip
+assets/cars/audi_r8/prepared/

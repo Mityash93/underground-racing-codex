@@ -10,6 +10,8 @@ var side := 1.0
 var roll: Node3D
 var roll_angle := 0.0
 var wheel_model: PackedScene
+var brake_model: PackedScene
+var rolling_radius := RADIUS
 var model_scale := 1.0
 
 func _ready() -> void:
@@ -24,6 +26,13 @@ func _ready() -> void:
 			model.scale *= model_scale
 			if side < 0.0:
 				model.rotate_y(PI)
+			if brake_model != null:
+				var fixed_brake := brake_model.instantiate() as Node3D
+				add_child(fixed_brake)
+				fixed_brake.name = "FixedBrake"
+				fixed_brake.scale *= model_scale
+				if side < 0.0:
+					fixed_brake.rotate_y(PI)
 			return
 		model.free()
 		push_warning("Модель колеса должна иметь корневой Node3D. Используется процедурное колесо.")
@@ -81,5 +90,5 @@ func _cylinder(node_name: String, radius: float, width: float, x: float, mat: Ma
 func update_motion(signed_speed: float, steering: float, delta: float) -> void:
 	rotation.y = steering * 0.36 if is_front else 0.0
 	# Forward is -Z; rolling forward therefore rotates around negative X.
-	roll_angle = wrapf(roll_angle - signed_speed * delta / RADIUS, -PI, PI)
+	roll_angle = wrapf(roll_angle - signed_speed * delta / rolling_radius, -PI, PI)
 	roll.rotation.x = roll_angle

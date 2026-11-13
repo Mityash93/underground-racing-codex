@@ -1,0 +1,37 @@
+{
+  "model_url": "https://sketchfab.com/3d-models/volkswagen-golf-gti-2025-84fe6c2b9feb4c8a854d16f3daf33eab",
+  "model_uid": "84fe6c2b9feb4c8a854d16f3daf33eab",
+  "title": "Volkswagen Golf GTI (2025)",
+  "author": "geyges",
+  "author_profile": "https://sketchfab.com/geyges",
+  "license_reported": {
+    "uri": "https://api.sketchfab.com/v3/licenses/72eb2b1960364637901eacce19283624",
+    "label": "Free Standard",
+    "fullName": "Free Standard",
+    "requirements": "Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works",
+    "url": "https://sketchfab.com/licenses",
+    "slug": "free-st"
+  },
+  "reported_face_count": 371827,
+  "reported_vertex_count": 215574,
+  "checked_on": "2026-11-13",
+  "intended_use": "Replace rival car visual; retain player T-Roc and independent AI",
+  "status": "integrated_and_tested_locally",
+  "model_archive_downloaded": true,
+  "notes": [
+    "User supplied the official downloaded archive, including license.txt.",
+    "First animation keys freeze closed driving pose; airbags removed.",
+    "Body, right wheel and fixed brake separated; source textures retained.",
+    "Third UV-set AO discarded for Godot compatibility.",
+    "Rear brakes reuse front assembly; optional art excluded from Git."
+  ],
+  "archive_sha256": "fa9506cffbdcbf1cc3bb988922323801278ff24eb187946009097547791b133b",
+  "validation": {
+    "godot": "4.7.2",
+    "model_checks": 29,
+    "model_failures": 0,
+    "rival_checks": 17,
+    "rival_failures": 0,
+    "rendered_front_and_rear_reviewed": true
+  }
+}

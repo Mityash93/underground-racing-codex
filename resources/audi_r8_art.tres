@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="VehicleArtProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/cars/vehicle_art_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+body_path = "res://assets/cars/audi_r8/prepared/audi_body.gltf"
+wheel_path = "res://assets/cars/audi_r8/prepared/audi_wheel.gltf"
+brake_path = "res://assets/cars/audi_r8/prepared/audi_brake.gltf"
+front_half_track = 0.8891356
+rear_half_track = 0.9136672
+wheel_y = 0.3966636
+front_z = -1.0982557
+rear_z = 1.4967293
+radius = 0.3466636
+headlight_position = Vector3(0, 0.66, -2.12)

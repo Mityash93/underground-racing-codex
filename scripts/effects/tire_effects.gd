@@ -104,7 +104,7 @@ func _physics_process(delta: float) -> void:
 	var sliding := car.controls_enabled and not car.freeze and car.grounded and car.speed_kmh > 22.0 and (car.drift_blend > 0.2 or absf(car.slip_angle) > 12.0)
 	for i in smoke.size():
 		smoke[i].emitting = sliding
-		smoke[i].global_position = car.global_transform * Vector3((-1.0 if i == 0 else 1.0) * CarVisual.AXLE_X, 0.15, CarVisual.REAR_AXLE_Z)
+		smoke[i].global_position = car.global_transform * Vector3((-1.0 if i == 0 else 1.0) * car.visual.rear_half_track, 0.15, car.visual.rear_z)
 	if not sliding:
 		_connected = false
 		return
@@ -113,7 +113,7 @@ func _physics_process(delta: float) -> void:
 	_interval = 0.0
 	var contacts: Array[Vector3] = []
 	for side in [-1.0, 1.0]:
-		var wheel := car.global_transform * Vector3(side * CarVisual.AXLE_X, CarVisual.WHEEL_Y, CarVisual.REAR_AXLE_Z)
+		var wheel := car.global_transform * Vector3(side * car.visual.rear_half_track, car.visual.wheel_y, car.visual.rear_z)
 		var query := PhysicsRayQueryParameters3D.create(wheel, wheel - Vector3.UP * 0.9, 1, [car.get_rid()])
 		var hit := get_world_3d().direct_space_state.intersect_ray(query)
 		if hit.is_empty() or hit.normal.dot(Vector3.UP) < 0.9 or hit.collider is ArcadeCar:

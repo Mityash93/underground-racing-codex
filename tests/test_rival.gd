@@ -26,7 +26,7 @@ func _run() -> void:
 	var race: RaceManager = main.race
 	var driver: RivalDriver = rival.get_node("Driver")
 	check(rival.freeze and not rival.controls_enabled and rival.external_driver, "independent opponent parked in menu")
-	check(rival.appearance == 1 and rival.visual.wheels.size() == 4, "red sedan with four working wheels")
+	check(rival.appearance == 1 and rival.visual.wheels.size() == 4, "red rival with four working wheels")
 	# Keyboard actions must never supply AI controls.
 	driver.set_physics_process(false)
 	rival.controls_enabled = true

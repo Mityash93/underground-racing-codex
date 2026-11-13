@@ -1,0 +1,17 @@
+{
+  "title": "Audi R8",
+  "author": "wallon",
+  "author_url": "https://sketchfab.com/realwallon",
+  "source": "https://sketchfab.com/3d-models/audi-r8-e17e438f076f4427a58d93aa779edaed",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "archive_sha256": "5f3917a137ce31ea97bd1a50944dfa4b9d754215802a7167ce6307e199ac21b6",
+  "changes": [
+    "Transforms baked, length normalized to 4.5 m, faces -Z.",
+    "Paired wheels separated; canonical front right wheel used at all mounts.",
+    "Calipers separated; front assembly also used at rear.",
+    "Baked source steering/camber removed from wheel and caliper; original width restored.",
+    "Meshes merged by material, original textures/copper paint retained.",
+    "Roughness bounded to 0.1; red rear LED responds to braking."
+  ]
+}

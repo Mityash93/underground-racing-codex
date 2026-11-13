@@ -14,6 +14,13 @@ var _shell: Node3D
 var _pose_velocity := Vector3.ZERO
 var body_model: PackedScene
 var wheel_model: PackedScene
+var brake_model: PackedScene
+var front_half_track := AXLE_X
+var rear_half_track := AXLE_X
+var wheel_y := WHEEL_Y
+var front_z := FRONT_AXLE_Z
+var rear_z := REAR_AXLE_Z
+var wheel_radius := WheelVisual.RADIUS
 var body_model_scale := 1.0
 var body_model_offset := Vector3.ZERO
 var body_model_rotation_degrees := Vector3.ZERO
@@ -46,15 +53,17 @@ func _ready() -> void:
 		else:
 			TRocBody.build(_shell, paint, trim, glass, rear_lights)
 	for side in [-1.0, 1.0]:
-		for axle_z in [FRONT_AXLE_Z, REAR_AXLE_Z]:
+		for axle_z in [front_z, rear_z]:
 			var wheel := WheelVisual.new()
 			wheel.name = ("Front" if axle_z < 0 else "Rear") + ("Left" if side < 0 else "Right")
 			wheel.side = side
 			wheel.is_front = axle_z < 0
 			wheel.wheel_model = wheel_model
+			wheel.brake_model = brake_model
+			wheel.rolling_radius = wheel_radius
 			wheel.model_scale = wheel_model_scale
 			add_child(wheel)
-			wheel.position = Vector3(side * AXLE_X, WHEEL_Y, axle_z)
+			wheel.position = Vector3(side * (front_half_track if axle_z < 0 else rear_half_track), wheel_y, axle_z)
 			wheels.append(wheel)
 
 func _build_imported_body() -> bool:

@@ -82,6 +82,15 @@ func _ready() -> void:
 	var version := _label(menu, "ПРОТОТИП 01     //     РОЖДЁННЫЙ ДЛЯ НОЧИ", 18, Color("9cb5c7"))
 	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	version.position = Vector2(110, 1020)
+	var credits := RichTextLabel.new()
+	credits.bbcode_enabled = true
+	credits.text = "3D: [url=https://sketchfab.com/3d-models/audi-r8-e17e438f076f4427a58d93aa779edaed]Audi R8[/url] — [url=https://sketchfab.com/realwallon]wallon[/url] · [url=https://creativecommons.org/licenses/by/4.0/]CC BY 4.0[/url] · адаптация для игры"
+	credits.position = Vector2(110, 982)
+	credits.size = Vector2(1400, 30)
+	credits.add_theme_font_size_override("normal_font_size", 16)
+	credits.modulate = Color("9cb5c7")
+	credits.meta_clicked.connect(func(url): OS.shell_open(str(url)))
+	menu.add_child(credits)
 	hud = _layer(root)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var top := _panel(hud, Vector2(52, 40), Vector2(760, 170))

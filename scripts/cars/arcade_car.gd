@@ -8,6 +8,7 @@ signal recovery_requested
 @export var external_driver := false
 @export_enum("T-Roc 2022", "Красный спортивный седан") var appearance := 0
 @export_group("Внешний вид — импорт модели")
+@export var art_profile: VehicleArtProfile
 @export var body_model: PackedScene
 @export var wheel_model: PackedScene
 @export_range(0.01, 10.0, 0.01) var body_model_scale := 1.0
@@ -74,6 +75,8 @@ func _ready() -> void:
 	add_child(sound)
 	var headlights := SpotLight3D.new()
 	headlights.position = Vector3(0, 1.02, -2.18)
+	if body_model == null and art_profile != null and art_profile.available():
+		headlights.position = art_profile.headlight_position
 	headlights.light_color = Color("b5ddff")
 	headlights.light_energy = 5.0
 	headlights.spot_range = 42.0
@@ -83,7 +86,7 @@ func _ready() -> void:
 
 func _build_visual() -> void:
 	visual = CarVisual.new()
-	visual.name = "WhiteTRoc2022Visual"
+	visual.name = "PlayerCarVisual"
 	visual.appearance = appearance
 	if appearance == 1:
 		visual.name = "RedRivalVisual"
@@ -93,6 +96,16 @@ func _build_visual() -> void:
 	visual.body_model_offset = body_model_offset
 	visual.body_model_rotation_degrees = body_model_rotation_degrees
 	visual.wheel_model_scale = wheel_model_scale
+	if body_model == null and art_profile != null and art_profile.available():
+		visual.body_model = load(art_profile.body_path)
+		visual.wheel_model = load(art_profile.wheel_path)
+		visual.brake_model = load(art_profile.brake_path)
+		visual.front_half_track = art_profile.front_half_track
+		visual.rear_half_track = art_profile.rear_half_track
+		visual.wheel_y = art_profile.wheel_y
+		visual.front_z = art_profile.front_z
+		visual.rear_z = art_profile.rear_z
+		visual.wheel_radius = art_profile.radius
 	add_child(visual)
 
 func _physics_process(delta: float) -> void:
@@ -240,7 +253,7 @@ func park_at(ground: Transform3D) -> void:
 	freeze = true
 	controls_enabled = false
 	_reset_pending = false
-	ground.origin += ground.basis.y * (WheelVisual.RADIUS - CarVisual.WHEEL_Y)
+	ground.origin += ground.basis.y * (visual.wheel_radius - visual.wheel_y)
 	transform = ground
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO

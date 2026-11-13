@@ -1,14 +1,16 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/cars/arcade_car.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/rival_tuning.tres" id="2"]
 [ext_resource type="Script" path="res://scripts/cars/rival_driver.gd" id="3"]
+[ext_resource type="Resource" path="res://resources/golf_gti_2025_art.tres" id="4"]
 
 [node name="RivalCar" type="RigidBody3D"]
 script = ExtResource("1")
 tuning = ExtResource("2")
 external_driver = true
 appearance = 1
+art_profile = ExtResource("4")
 
 [node name="Driver" type="Node" parent="."]
 script = ExtResource("3")
