@@ -11,4 +11,4 @@ const ANCHORS := [
 	Vector3(140, 0, -230), Vector3(300, 0, -210), Vector3(440, 0, -100),
 	Vector3(460, 0, 70), Vector3(360, 0, 210), Vector3(220, 0, 260)]
 const COLORS := [Color("39dcea"), Color("ffad58"), Color("64c5ff")]
-const NAMES := ["НЕОНОВЫЙ ЦЕНТР", "ПРОМЗОНА «ИСКРА»", "СЕВЕРНАЯ НАБЕРЕЖНАЯ"]
+const NAMES := ["СТАРЫЙ ЦЕНТР", "ПРОМЗОНА «ЗАРЕЧЬЕ»", "ПОРТОВАЯ НАБЕРЕЖНАЯ"]

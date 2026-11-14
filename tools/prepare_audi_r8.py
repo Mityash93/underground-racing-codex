@@ -127,7 +127,13 @@ def prepare():
     front_mount = vehicle_point(front)
     rear_mount = vehicle_point(rear)
     materials = copy.deepcopy(gltf["materials"])
-    # Retain the source copper paint. Bound extreme gloss for stable night lighting.
+    # Light pearl-silver paint remains legible under the game's night lighting.
+    paint = materials[11]
+    assert paint["name"] == "body"
+    paint["name"] = "StreetLegends_PearlSilver"
+    paint["pbrMetallicRoughness"].update(baseColorFactor=[0.72, 0.75, 0.78, 1.0],
+                                       metallicFactor=0.45, roughnessFactor=0.28)
+    paint["extensions"]["KHR_materials_clearcoat"]["clearcoatRoughnessFactor"] = 0.18
     for material in materials:
         pbr = material.get("pbrMetallicRoughness", {})
         pbr["roughnessFactor"] = max(0.1, pbr.get("roughnessFactor", 1.0))
@@ -209,7 +215,7 @@ def prepare():
                     "Paired wheels separated; canonical front right wheel used at all mounts.",
                     "Calipers separated; front assembly also used at rear.",
                     "Baked source steering/camber removed from wheel and caliper; original width restored.",
-                    "Meshes merged by material, original textures/copper paint retained.",
+                    "Meshes merged by material, original textures retained; body repainted pearl silver.",
                     "Roughness bounded to 0.1; red rear LED responds to braking."]}, indent=2) + "\n")
     print(json.dumps(calibration, indent=2))
 

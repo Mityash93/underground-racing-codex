@@ -11,7 +11,7 @@
     "Paired wheels separated; canonical front right wheel used at all mounts.",
     "Calipers separated; front assembly also used at rear.",
     "Baked source steering/camber removed from wheel and caliper; original width restored.",
-    "Meshes merged by material, original textures/copper paint retained.",
+    "Meshes merged by material, original textures retained; body repainted pearl silver.",
     "Roughness bounded to 0.1; red rear LED responds to braking."
   ]
 }

@@ -53,6 +53,7 @@ func _run() -> void:
 	await ticks(190)
 	# Put the waiting player directly into the AI lane to exercise a physical pass.
 	var blocker: Transform3D = main.track.transform_at(55.0)
+	blocker.origin.y = 0.018
 	blocker.origin += blocker.basis.x * 3.2
 	main.car.park_at(blocker)
 	var avoided := false

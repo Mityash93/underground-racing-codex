@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RivalDifficulty" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/race/rival_difficulty.gd" id="1"]
+[resource]
+script = ExtResource("1")
+description = "Раньше тормозит и оставляет больше места для обгона."
+speed_limit = 140.0
+corner_acceleration = 12.5
+planning_brake = 7.0
+brake_buffer = 16.0
+reaction_time = 0.28
+throttle_limit = 0.90
+passing_distance = 38.0
+lane_change_rate = 2.5
+apex_offset = 0.0

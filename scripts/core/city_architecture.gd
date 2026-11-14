@@ -27,9 +27,13 @@ static func build(track: CityTrack) -> void:
 	materials["glass_off"] = _window_material(Color("607b87"), 0.0)
 	materials["glass_warm"] = _window_material(Color("dbb583"), 1.0)
 	materials["glass_cool"] = _window_material(Color("9fbec8"), 1.0)
+	var tree_meshes := HarborTrees.meshes()
+	var tree_leaves := ShaderMaterial.new()
+	tree_leaves.shader = load("res://assets/materials/harbor_leaves.gdshader")
+	materials["trunk"].cull_mode = BaseMaterial3D.CULL_DISABLED
 	for site in range(0, int(track.track_length / SITE_SPACING)):
 		var distance := 110.0 + site * SITE_SPACING
-		if distance >= track.track_length - 120.0 or track.in_tunnel(distance):
+		if distance >= track.track_length - 120.0 or track.in_tunnel(distance) or LanternQuarter.contains(distance):
 			continue
 		var district := track.district_at(distance)
 		var bucket := int(distance / CHUNK_LENGTH)
@@ -40,7 +44,6 @@ static func build(track: CityTrack) -> void:
 		road.origin.y = 0
 		for side in [-1.0, 1.0]:
 			if district == 2 and side < 0:
-				_promenade(b, road, site)
 				continue
 			# Keep the existing crane and freight yard readable rather than burying them.
 			if district == 1 and side < 0 and (absf(distance - track.anchor_distance(5) - 40) < 45 or absf(distance - track.anchor_distance(6) - 35) < 38):
@@ -75,6 +78,17 @@ static func build(track: CityTrack) -> void:
 				poses.append(local_pose)
 			var near: bool = group.begins_with("near_")
 			var key: String = group.trim_prefix("near_")
+			if key == "tree":
+				for layer in 2:
+					CityDistricts._batch_mesh(root, tree_meshes[layer], poses, materials["trunk"] if layer == 0 else tree_leaves)
+					var tree_batch := root.get_child(root.get_child_count() - 1) as GeometryInstance3D
+					tree_batch.name = "TreeBranches" if layer == 0 else "TreeLeaves"
+					tree_batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+					tree_batch.visibility_range_end = 315
+					tree_batch.visibility_range_end_margin = 20
+				instances += poses.size() * 2
+				groups += 2
+				continue
 			if key in ["glass_off", "glass_warm", "glass_cool"]:
 				CityDistricts._batch_mesh(root, QuadMesh.new(), poses, materials[key])
 			elif key == "foliage":
@@ -171,7 +185,7 @@ static func _block(root: Node3D, b: Dictionary, p: Transform3D, width: float, st
 	_roof(b, p, height, width)
 	_shop(b, p, width, style, index)
 	if index % 3 == 0 or style == 2:
-		_sign(root, p, ["НОЧНАЯ СМЕНА / КОФЕ", "ОРБИТА / МЕДИА", "ОТЕЛЬ «МЕРИДИАН»"][style], Vector3(0, 3.5, 0.82), Color("f1c38e"), 0.010)
+		_sign(root, p, CityNames.CITY_BUSINESSES[style], Vector3(0, 3.5, 0.82), Color("f1c38e"), 0.010)
 
 static func _pane(b: Dictionary, p: Transform3D, x: float, y: float, width: float, height: float, rng: RandomNumberGenerator, detail: bool) -> void:
 	var choice := rng.randf()
@@ -246,7 +260,7 @@ static func _warehouse(root: Node3D, b: Dictionary, p: Transform3D, width: float
 		_put(b, "oxide", p, Vector3(x, 0.7, 1.0), Vector3(0.2, 1.4, 0.2))
 	_roof(b, p, height + rise, width)
 	if index % 2 == 0:
-		_sign(root, p, "ИСКРА / ЦЕХ %02d" % (index % 8 + 1), Vector3(0, height + 0.8, 0.3), Color("e8b176"), 0.014)
+		_sign(root, p, "ЗАРЕЧЬЕ / ЦЕХ %02d" % (index % 8 + 1), Vector3(0, height + 0.8, 0.3), Color("e8b176"), 0.014)
 
 static func _furniture(b: Dictionary, road: Transform3D, side: float, index: int) -> void:
 	var x := side * 18.4
@@ -260,18 +274,8 @@ static func _furniture(b: Dictionary, road: Transform3D, side: float, index: int
 		_tree(b, road, Vector3(side * 20.4, 0.17, 13))
 
 static func _tree(b: Dictionary, p: Transform3D, at: Vector3) -> void:
-	_put(b, "trunk", p, at + Vector3.UP * 2.1, Vector3(0.25, 4.2, 0.25))
-	_put(b, "foliage", p, at + Vector3.UP * 4.8, Vector3(5, 3.2, 4.5))
-	_put(b, "foliage", p, at + Vector3(1.1, 4.5, 0.8), Vector3(3.4, 2.8, 3.6))
-	_put(b, "foliage", p, at + Vector3(-1.3, 4.2, -0.6), Vector3(3.0, 2.6, 3.4))
-
-static func _promenade(b: Dictionary, road: Transform3D, index: int) -> void:
-	_furniture(b, road, -1.0, index)
-	_put(b, "wood", road, Vector3(-22, 0.20, 0), Vector3(3.5, 0.08, 34))
-	for z in [-12.0, 12.0]:
-		_put(b, "metal", road, Vector3(-22, 3, z), Vector3(0.12, 6, 0.12))
-		_put(b, "cyan", road, Vector3(-22, 5.9, z), Vector3(1.3, 0.08, 0.5))
-		_put(b, "stone_blue", road, Vector3(-22, 4.5, z + 0.6), Vector3(0.08, 2, 1.1))
+	var rotation := Basis(Vector3.UP, fposmod(p.origin.x * 0.31 + p.origin.z * 0.24, TAU))
+	StreetShowcase._put(b, "tree", p * Transform3D(rotation, at), Vector3.ZERO, Vector3.ONE * 0.95)
 
 static func _sign(root: Node3D, p: Transform3D, words: String, at: Vector3, color: Color, pixel: float) -> void:
 	var sign := Label3D.new()
@@ -286,9 +290,11 @@ static func _sign(root: Node3D, p: Transform3D, words: String, at: Vector3, colo
 
 static func _dock_cranes(track: CityTrack, city: Node3D) -> void:
 	var beams: Array[Transform3D] = []
+	var quays: Array[Transform3D] = []
 	for index in [10, 12]:
 		var p := track.transform_at(track.anchor_distance(index) + 20)
 		p.origin.y = 0
+		quays.append(p * GameGeometry.box_transform(Vector3(-58.5, -0.8, 0), Vector3(64, 2.0, 28)))
 		for x in [-75.0, -53.0]:
 			for z in [-6.0, 6.0]:
 				beams.append(p * GameGeometry.box_transform(Vector3(x, 15, z), Vector3(0.8, 30, 0.8)))
@@ -299,6 +305,8 @@ static func _dock_cranes(track: CityTrack, city: Node3D) -> void:
 		beams.append(p * GameGeometry.box_transform(Vector3(-87, 14, 0), Vector3(1.4, 0.5, 1.4)))
 	GameGeometry.batch_boxes(city, beams, GameGeometry.material(Color("54717c")))
 	city.get_child(city.get_child_count() - 1).name = "HarborCranes"
+	GameGeometry.batch_boxes(city, quays, _masonry(Color("565b5d"), false))
+	city.get_child(city.get_child_count() - 1).name = "CargoQuays"
 
 static func _skyline(track: CityTrack, city: Node3D, materials: Dictionary) -> void:
 	var b := {}

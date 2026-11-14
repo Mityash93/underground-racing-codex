@@ -38,7 +38,20 @@ func _run() -> void:
 	check(boosted.nitro.active and boosted.speed_kmh > ordinary.speed_kmh + 25.0, "nitro adds real forward acceleration")
 	check(boosted.nitro.charge > 0.50 and boosted.nitro.charge < 0.60, "reservoir consumes about two seconds of 4.5-second capacity")
 	check(not ordinary.nitro.active and ordinary.nitro.charge == 1.0, "Shift never boosts external AI driver")
-	await ticks(210)
+	ordinary.set_nitro_input(true)
+	await ticks(60)
+	check(ordinary.nitro.active and ordinary.nitro.charge < 0.80 and ordinary.nitro.charge > 0.70, "external driver's own command spends the same nitro reservoir")
+	ordinary.controls_enabled = false
+	var ai_charge := ordinary.nitro.charge
+	await ticks(10)
+	check(not ordinary.nitro.active and is_equal_approx(ai_charge, ordinary.nitro.charge), "disabled AI cannot consume or refill nitro")
+	ordinary.park_at(Transform3D(Basis.IDENTITY, Vector3(10, 0, 0)))
+	ordinary.freeze = false
+	ordinary.controls_enabled = true
+	ordinary.set_drive_input(1, 0, 0)
+	await ticks(2)
+	check(not ordinary.nitro.active and is_equal_approx(ordinary.nitro.charge, 1.0), "new grid clears AI boost command while player Shift remains held")
+	await ticks(138)
 	check(boosted.nitro.exhausted and not boosted.nitro.active and is_zero_approx(boosted.nitro.charge), "holding empty tank cannot restart boost")
 	await ticks(150)
 	check(is_zero_approx(boosted.nitro.charge), "empty held Shift cannot pulse or refill nitro")
@@ -133,9 +146,9 @@ func _test_difficulty_and_ui() -> void:
 	main.records.path = "res://tests/artifacts/ignored_records.cfg"
 	main.set_difficulty(0)
 	var driver: RivalDriver = main.rival.get_node("Driver")
-	check(driver.max_speed_kmh == 125.0 and main.ui.difficulty_select.selected == 0, "menu applies easy difficulty")
+	check(driver.max_speed_kmh == 140.0 and main.ui.difficulty_select.selected == 0, "menu applies easy difficulty")
 	main.set_difficulty(2)
-	check(driver.max_speed_kmh == 190.0, "menu applies hard difficulty")
+	check(driver.max_speed_kmh == 210.0, "menu applies hard difficulty")
 	main.start_race()
 	main.set_difficulty(0)
 	check(driver.difficulty == 2, "difficulty locked during race")

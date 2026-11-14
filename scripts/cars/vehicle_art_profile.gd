@@ -11,6 +11,13 @@ extends Resource
 @export var rear_z := 1.29
 @export var radius := 0.36
 @export var headlight_position := Vector3(0, 1.02, -2.18)
+@export_group("Камера")
+@export var chase_distance := 8.7
+@export var chase_height := 3.65
+@export var close_distance := 6.2
+@export var close_height := 2.6
+@export var camera_focus_height := 1.15
+@export var camera_fov := 66.0
 
 func available() -> bool:
 	return not body_path.is_empty() and not wheel_path.is_empty() and not brake_path.is_empty() \

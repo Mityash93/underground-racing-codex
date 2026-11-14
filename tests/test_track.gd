@@ -67,7 +67,7 @@ func _run() -> void:
 	check(space.intersect_ray(camera_query).is_empty(), "default chase camera fits inside tunnel")
 	check(track.has_node("ImpulseTunnel") and track.has_node("IskraWorks") and track.has_node("FreightYard") and track.has_node("NorthHarborWater") and track.has_node("HarborBeacon"), "district landmark geometry exists")
 	var lights := track.find_children("*", "OmniLight3D", true, false)
-	check(lights.size() <= 16, "local track light budget stays at 16 without added shadows")
+	check(track.find_children("*", "Light3D", true, false).size() <= 22, "track light budget stays at 22 including two quay lights")
 	for light in lights:
 		check(not light.shadow_enabled, "district point light has no shadow")
 	var showcase := track.get_node("StartBoulevard")
@@ -78,12 +78,27 @@ func _run() -> void:
 	print("STREET ART: %d batched groups, %d instances" % [batches.size(), instances])
 	check(batches.size() <= 20 and instances <= 2600, "detailed street stays within instance/draw-group budget")
 	var city := track.get_node("CityArchitecture")
+	var quarter := track.get_node("LanternQuarter")
 	var district_counts: Array = city.get_meta("district_counts")
 	print("CITY ART: %s frontages; %d groups; %d instances; %d skyline towers" % [district_counts,
 		city.get_meta("batch_count"), city.get_meta("instance_count"), city.get_node("DistantSkyline").get_meta("tower_count")])
-	check(district_counts.all(func(count): return count >= 8), "detailed architecture extends through all three districts")
+	check(district_counts[0] + quarter.get_meta("frontage_count") >= 8 and district_counts[1] >= 8 and district_counts[2] >= 8, "detailed architecture extends through all three districts")
 	check(city.get_meta("batch_count") <= 260 and city.get_meta("instance_count") <= 45000, "whole-city detail is spatially batched within geometry budget")
 	check(city.get_node("DistantSkyline").get_meta("tower_count") >= 6 and track.has_node("RoadDress/LaneArrows"), "skyline and road dressing exist beyond first street")
+	check(quarter.get_meta("frontage_count") >= 6, "hand-authored quarter replaces generic buildings after tunnel")
+	check(quarter.get_meta("batch_count") <= 40 and quarter.get_meta("instance_count") <= 4500, "real shop interiors stay within quarter geometry budget")
+	var shop_lights := quarter.find_children("*", "Light3D", true, false)
+	check(shop_lights.size() <= 4 and shop_lights.filter(func(light): return light.shadow_enabled).size() <= 1, "quarter uses four bounded lights and at most one local shadow")
+	var harbor := track.get_node("HarborPromenade")
+	check(harbor.get_node("TreeLeaves").multimesh.instance_count >= 15 and harbor.find_children("CabinBoat_*", "Node3D", true, false).size() == 4, "promenade instantiates foliage and four original boats")
+	check(harbor.get_meta("instance_count") <= 2200, "promenade geometry is batched within budget")
+	var water: MeshInstance3D = track.get_node("NorthHarborWater")
+	check(is_equal_approx(water.mesh.get_aabb().position.y, HarborCoast.WATER_Y) and HarborCoast.WATER_Y < -1, "harbor water lies below quay level")
+	var coast := HarborCoast.water_polygon(track)
+	var land_clear := true
+	for point in track.points:
+		land_clear = land_clear and not Geometry2D.is_point_in_polygon(Vector2(point.x, point.z), coast)
+	check(land_clear, "coastal cutout does not remove ground underneath road centreline")
 	var camera_clear := true
 	var camera_shape := SphereShape3D.new()
 	camera_shape.radius = 0.3

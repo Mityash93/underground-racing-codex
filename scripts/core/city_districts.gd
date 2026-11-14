@@ -6,11 +6,11 @@ static func build(track: CityTrack) -> void:
 	_tunnel(track)
 	_industrial(track)
 	_waterfront(track)
-	_portal(track, track.anchor_distance(4) - 60, "ИСКРА  /  ПРОМЫШЛЕННЫЙ РАЙОН", TrackLayout.COLORS[1])
-	_portal(track, track.anchor_distance(9) - 70, "СЕВЕРНАЯ НАБЕРЕЖНАЯ", TrackLayout.COLORS[2])
-	_portal(track, track.anchor_distance(14) - 40, "НЕОНОВЫЙ ЦЕНТР  /  ФИНИШ ВПЕРЕДИ", TrackLayout.COLORS[0])
+	_portal(track, track.anchor_distance(4) - 60, "ЗАРЕЧЬЕ  /  ПРОМЫШЛЕННЫЙ РАЙОН", TrackLayout.COLORS[1])
+	_portal(track, track.anchor_distance(9) - 70, "ПОРТОВАЯ НАБЕРЕЖНАЯ", TrackLayout.COLORS[2])
+	_portal(track, track.anchor_distance(14) - 40, "СТАРЫЙ ЦЕНТР  /  ФИНИШ ВПЕРЕДИ", TrackLayout.COLORS[0])
 	for gap in [100.0, 50.0]:
-		_roadside_sign(track, track.anchor_distance(7) - gap, "S-ПОВОРОТЫ\n%d м" % gap, Color("ffc56a"))
+		_roadside_sign(track, track.anchor_distance(7) - gap, "СВЯЗКА\nПОВОРОТОВ\n%d м" % gap, Color("ffc56a"))
 
 static func _root(track: CityTrack, title: String, distance: float) -> Node3D:
 	var node := Node3D.new()
@@ -61,7 +61,7 @@ static func _tunnel(track: CityTrack) -> void:
 		light.omni_range = 32.0
 		light.shadow_enabled = false
 		tunnel.add_child(light)
-	_portal(track, TrackLayout.TUNNEL_START - 8, "ИМПУЛЬС  /  ТОННЕЛЬ 200 м", Color("ffc37d"))
+	_portal(track, TrackLayout.TUNNEL_START - 8, "ПОРТОВЫЙ ТОННЕЛЬ / 200 м", Color("ffc37d"))
 
 static func _portal(track: CityTrack, distance: float, words: String, color: Color) -> void:
 	var portal := _root(track, "DistrictPortal", distance)
@@ -115,7 +115,7 @@ static func _industrial(track: CityTrack) -> void:
 				blue.append(pose)
 	GameGeometry.batch_boxes(containers, orange, GameGeometry.material(Color("a85b35")))
 	GameGeometry.batch_boxes(containers, blue, GameGeometry.material(Color("24516a")))
-	_label(containers, "ИСКРА / ГРУЗОВОЙ ТЕРМИНАЛ", Vector3(-38, 7.5, 6.1), Color("ffc56a"))
+	_label(containers, "ЗАРЕЧЬЕ / ГРУЗОВОЙ ТЕРМИНАЛ", Vector3(-38, 7.5, 6.1), Color("ffc56a"))
 
 static func _waterfront(track: CityTrack) -> void:
 	var water := SurfaceTool.new()
@@ -128,19 +128,21 @@ static func _waterfront(track: CityTrack) -> void:
 		var forward := (q - p).normalized()
 		var outside_a := -(q - track.points[i - 1]).normalized().cross(Vector3.UP)
 		var outside_b := -(track.points[i + 2] - p).normalized().cross(Vector3.UP)
-		var a := p + outside_a * 28.0 + Vector3.UP * 0.025
-		var b := p + outside_a * 160.0 + Vector3.UP * 0.025
-		var c := q + outside_b * 28.0 + Vector3.UP * 0.025
-		var d := q + outside_b * 160.0 + Vector3.UP * 0.025
+		var a := p + outside_a * HarborCoast.WATER_START + Vector3.UP * HarborCoast.WATER_Y
+		var b := p + outside_a * HarborCoast.WATER_EXTENT + Vector3.UP * HarborCoast.WATER_Y
+		var c := q + outside_b * HarborCoast.WATER_START + Vector3.UP * HarborCoast.WATER_Y
+		var d := q + outside_b * HarborCoast.WATER_EXTENT + Vector3.UP * HarborCoast.WATER_Y
 		for vertex in [a, b, c, b, d, c]:
 			water.set_normal(Vector3.UP)
 			water.add_vertex(vertex)
-		var center := p.lerp(q, 0.5) + (outside_a + outside_b).normalized() * 24.5
+		var center := p.lerp(q, 0.5) + (outside_a + outside_b).normalized() * HarborCoast.SHORE_DISTANCE
 		var yaw := atan2(-forward.x, -forward.z)
-		for height in [0.5, 1.05]:
-			rails.append(GameGeometry.box_transform(center + Vector3.UP * height, Vector3(0.10, 0.09, p.distance_to(q) + 0.1), yaw))
+		var pier_entry := absf((track.distances[i] + track.distances[i + 1]) * 0.5 - track.anchor_distance(10) - 80) < 4 or absf((track.distances[i] + track.distances[i + 1]) * 0.5 - track.anchor_distance(12) - 80) < 4
+		if not pier_entry:
+			for height in [0.5, 1.05]:
+				rails.append(GameGeometry.box_transform(center + Vector3.UP * height, Vector3(0.10, 0.09, p.distance_to(q) + 0.1), yaw))
 		if i % 3 == 0:
-			posts.append(GameGeometry.box_transform(p + outside_a * 24.5 + Vector3.UP * 0.6, Vector3(0.15, 1.2, 0.15)))
+			posts.append(GameGeometry.box_transform(p + outside_a * HarborCoast.SHORE_DISTANCE + Vector3.UP * 0.6, Vector3(0.15, 1.2, 0.15)))
 	var surface := MeshInstance3D.new()
 	surface.name = "NorthHarborWater"
 	surface.mesh = water.commit()
@@ -155,14 +157,21 @@ static func _waterfront(track: CityTrack) -> void:
 	var lighthouse := CylinderMesh.new()
 	lighthouse.top_radius = 2.3
 	lighthouse.bottom_radius = 3.2
-	lighthouse.height = 18
+	lighthouse.height = 20
 	lighthouse.radial_segments = 16
-	_batch_mesh(beacon, lighthouse, [Transform3D(Basis.IDENTITY, Vector3(-72, 9, 0))], GameGeometry.material(Color("9fabb1")))
+	_batch_mesh(beacon, lighthouse, [Transform3D(Basis.IDENTITY, Vector3(-72, 8, 0))], GameGeometry.material(Color("9fabb1")))
+	var foundation := CylinderMesh.new()
+	foundation.top_radius = 4.2
+	foundation.bottom_radius = 4.7
+	foundation.height = 1.4
+	foundation.radial_segments = 20
+	_batch_mesh(beacon, foundation, [Transform3D(Basis.IDENTITY, Vector3(-72, -1.4, 0))], StreetShowcase.concrete_material())
 	GameGeometry.box(beacon, Vector3(6, 2.8, 6), Vector3(-72, 19, 0), GameGeometry.material(Color("41c8d9"), 0.8))
 	GameGeometry.box(beacon, Vector3(7, 0.5, 7), Vector3(-72, 20.6, 0), GameGeometry.material(Color("24394d")))
 	GameGeometry.box(beacon, Vector3(0.15, 1.5, 10), Vector3(-68.7, 12, 0), GameGeometry.material(Color("122333")))
-	var sign := _label(beacon, "СЕВЕРНЫЙ ПОРТ", Vector3(-68.6, 12, 0), Color("64c5ff"), 0.012)
+	var sign := _label(beacon, "ГРУЗОВОЙ ПОРТ", Vector3(-68.6, 12, 0), Color("64c5ff"), 0.012)
 	sign.rotation.y = PI / 2.0
+	HarborPromenade.build(track)
 
 static func _batch_mesh(parent: Node3D, mesh: Mesh, poses: Array[Transform3D], material: Material) -> void:
 	var multi := MultiMesh.new()

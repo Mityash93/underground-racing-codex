@@ -93,7 +93,7 @@ static func _facade(root: Node3D, b: Dictionary, pose: Transform3D, index: int, 
 		_put(b, "metal", pose, Vector3(x * 0.3, 1.6, 0.31), Vector3(0.025, 0.4, 0.05))
 	_put(b, "metal", pose, Vector3(0, 1.65, 0.28), Vector3(0.06, 3.3, 0.12))
 	_put(b, "recess", pose, Vector3(0, 4.02, 0.23), Vector3(13, 0.76, 0.22))
-	var titles := ["АПЕКС / АВТОСЕРВИС", "НОЧНОЙ ФИЛИН", "24 / МАРКЕТ", "НЕОН / АУДИО", "ПОЛУНОЧЬ / КОФЕ"]
+	var titles := CityNames.START_SHOPS
 	var text := Label3D.new()
 	text.text = titles[index]
 	text.font_size = 48
@@ -105,7 +105,7 @@ static func _facade(root: Node3D, b: Dictionary, pose: Transform3D, index: int, 
 	if index == 1 or index == 3:
 		_put(b, "recess", pose, Vector3(12, 7.2, 1.1), Vector3(0.28, 5.2, 2.1))
 		var blade := Label3D.new()
-		blade.text = "Н\nЕ\nО\nН" if index == 3 else "24\nЧ"
+		blade.text = "З\nВ\nУ\nК" if index == 3 else "К\nО\nФ\nЕ"
 		blade.font_size = 48
 		blade.pixel_size = 0.015
 		root.add_child(blade)

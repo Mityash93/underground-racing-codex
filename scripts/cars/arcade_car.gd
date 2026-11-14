@@ -39,6 +39,7 @@ var _previous_velocity := Vector3.ZERO
 var _filtered_acceleration := Vector3.ZERO
 var _drive_command := Vector3.ZERO
 var _drift_command := false
+var _nitro_command := false
 
 func _ready() -> void:
 	if tuning == null:
@@ -111,13 +112,16 @@ func _build_visual() -> void:
 func _physics_process(delta: float) -> void:
 	_read_controls(delta)
 	_update_vehicle_feedback(delta)
-	var wanted := not external_driver and Input.is_action_pressed("nitro")
+	var wanted := _nitro_command if external_driver else Input.is_action_pressed("nitro")
 	var eligible := grounded and throttle > 0.1 and brake < 0.1 and not handbrake and linear_velocity.dot(-global_basis.z) > 2.8
 	nitro.update(delta, wanted, eligible, controls_enabled and not freeze, tuning)
 
 func set_drive_input(gas: float, braking: float, steering: float, drift: bool = false) -> void:
 	_drive_command = Vector3(clampf(gas, 0.0, 1.0), clampf(braking, 0.0, 1.0), clampf(steering, -1.0, 1.0))
 	_drift_command = drift
+
+func set_nitro_input(enabled: bool) -> void:
+	_nitro_command = enabled and external_driver
 
 func _read_controls(delta: float) -> void:
 	if controls_enabled:
@@ -232,6 +236,7 @@ func recover_to(at: Transform3D) -> void:
 	_recovery_transform = at
 	_reset_pending = true
 	nitro.stop()
+	_nitro_command = false
 	tire_effects.break_trail()
 	steer = 0.0
 	_upside_down_time = 0.0
@@ -262,6 +267,7 @@ func park_at(ground: Transform3D) -> void:
 	brake = 0.0
 	handbrake = false
 	set_drive_input(0, 0, 0)
+	set_nitro_input(false)
 	nitro.reset()
 	tire_effects.clear()
 	_reset_feedback()

@@ -19,9 +19,9 @@ static func build(parent: Node3D, points: PackedVector3Array) -> void:
 		var length := points[i].distance_to(points[next])
 		for sign_side in [-1.0, 1.0]:
 			var a: Vector3 = points[i] + side_a * sign_side * 13.15 + Vector3.UP * 0.17
-			var b: Vector3 = points[i] + side_a * sign_side * 20.5 + Vector3.UP * 0.17
+			var b: Vector3 = points[i] + side_a * sign_side * 24.1 + Vector3.UP * 0.17
 			var c: Vector3 = points[next] + side_b * sign_side * 13.15 + Vector3.UP * 0.17
-			var d: Vector3 = points[next] + side_b * sign_side * 20.5 + Vector3.UP * 0.17
+			var d: Vector3 = points[next] + side_b * sign_side * 24.1 + Vector3.UP * 0.17
 			for vertex in [a, b, c, b, d, c]:
 				pavement.set_normal(Vector3.UP)
 				pavement.add_vertex(vertex)
@@ -31,12 +31,12 @@ static func build(parent: Node3D, points: PackedVector3Array) -> void:
 			else:
 				dark_curbs.append(curb)
 			if i % 2 == 0:
-				joints.append(GameGeometry.box_transform(center + side * sign_side * 16.8 + Vector3.UP * 0.174, Vector3(7.2, 0.006, 0.045), yaw))
+				joints.append(GameGeometry.box_transform(center + side * sign_side * 18.6 + Vector3.UP * 0.174, Vector3(10.9, 0.006, 0.045), yaw))
 	var sidewalk := MeshInstance3D.new()
 	sidewalk.name = "Sidewalks"
 	sidewalk.mesh = pavement.commit()
-	var mat := GameGeometry.material(Color("394654"))
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://assets/materials/pavement.gdshader")
 	sidewalk.material_override = mat
 	parent.add_child(sidewalk)
 	GameGeometry.batch_boxes(parent, pale_curbs, GameGeometry.material(Color("7f8991")))

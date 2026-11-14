@@ -27,6 +27,7 @@ var result_title: Label
 var results_text: Label
 var minimap: RaceMinimap
 var difficulty_select: OptionButton
+var difficulty_details: Label
 var record_label: Label
 var nitro_bar: ProgressBar
 var nitro_label: Label
@@ -67,7 +68,7 @@ func _ready() -> void:
 	_label(menu_box, "УЛИЧНЫЕ\nЛЕГЕНДЫ", 88, Color.WHITE)
 	_label(menu_box, "Город — твоя стартовая решётка.", 22, ORANGE)
 	_space(menu_box, 24)
-	_label(menu_box, "НЕОНОВОЕ КОЛЬЦО / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ДУЭЛЬ С AI «ВЕКТОР»", 24, Color("adc1d3"))
+	_label(menu_box, "НЕОНОВОЕ КОЛЬЦО / НОЧНОЙ ЗАЕЗД\n2 КРУГА · ДУЭЛЬ С «ВЕКТОРОМ»", 24, Color("adc1d3"))
 	difficulty_select = OptionButton.new()
 	for title in ["СОПЕРНИК: ЛЁГКИЙ", "СОПЕРНИК: СРЕДНИЙ", "СОПЕРНИК: СЛОЖНЫЙ"]:
 		difficulty_select.add_item(title)
@@ -75,6 +76,9 @@ func _ready() -> void:
 	difficulty_select.custom_minimum_size.y = 48
 	difficulty_select.item_selected.connect(func(level: int): difficulty_changed.emit(level))
 	menu_box.add_child(difficulty_select)
+	difficulty_details = _label(menu_box, RivalDifficulty.for_level(1).description, 18, Color("adc1d3"))
+	difficulty_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	difficulty_details.custom_minimum_size = Vector2(580, 44)
 	record_label = _label(menu_box, "РЕКОРД: --:--.---", 20, CYAN)
 	_button(menu_box, "НАЧАТЬ ЗАЕЗД   →", func(): start_requested.emit())
 	_button(menu_box, "ВЫХОД", func(): get_tree().quit())
@@ -96,7 +100,7 @@ func _ready() -> void:
 	var top := _panel(hud, Vector2(52, 40), Vector2(760, 170))
 	stats = _label(top, "", 30)
 	stats.position = Vector2(24, 16)
-	status = _label(top, "НЕОНОВЫЙ РАЙОН", 19, CYAN)
+	status = _label(top, "СТАРЫЙ ЦЕНТР", 19, CYAN)
 	status.position = Vector2(24, 82)
 	place = _label(top, "", 24, ORANGE)
 	place.position = Vector2(24, 117)
@@ -249,8 +253,14 @@ func update_race(car: ArcadeCar, race: RaceManager) -> void:
 	status.text = "ВОРОТА %02d / %02d   /   КРУГ %s" % [race.next_checkpoint if race.next_checkpoint > 0 else 12, 12, RaceManager.format_time(race.lap_time)]
 	var gap := race.rival_gap_meters()
 	place.text = "МЕСТО %d / 2 · ВЕКТОР %s %d м" % [race.player_position(), "ПОЗАДИ" if gap >= 0 else "ВПЕРЕДИ", roundi(absf(gap))] if race.is_duel() else "ЗАЕЗД НА ВРЕМЯ"
+	if race.is_duel() and race.rival_car.nitro.active:
+		place.text += " · НИТРО"
 	_fps.text = "%d кадр/с  /  %s" % [Engine.get_frames_per_second(), "ЗАНОС" if car.drift_blend > 0.15 or absf(car.slip_angle) > 9.0 and car.speed_kmh > 25.0 else race.track.section_name(race.track.nearest_distance(car.global_position))]
 	countdown_label.text = str(ceili(race.countdown)) if race.state == RaceManager.State.COUNTDOWN else ("СТАРТ!" if race.state == RaceManager.State.RUNNING and race.elapsed < 0.85 else "")
+
+func update_difficulty(level: int) -> void:
+	difficulty_select.select(level)
+	difficulty_details.text = RivalDifficulty.for_level(level).description
 
 func show_menu() -> void:
 	menu.show()

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RivalDifficulty" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/race/rival_difficulty.gd" id="1"]
+[resource]
+script = ExtResource("1")
+description = "Защищает позицию, позже тормозит и использует нитро."
+speed_limit = 210.0
+corner_acceleration = 21.0
+planning_brake = 11.0
+brake_buffer = 6.0
+reaction_time = 0.06
+passing_distance = 75.0
+lane_change_rate = 4.2
+apex_offset = 2.1
+defend_position = true
+use_nitro = true

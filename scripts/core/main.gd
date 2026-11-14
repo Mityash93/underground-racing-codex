@@ -88,7 +88,7 @@ func set_difficulty(level: int) -> void:
 	if not in_menu:
 		return
 	difficulty = clampi(level, 0, 2)
-	ui.difficulty_select.select(difficulty)
+	ui.update_difficulty(difficulty)
 	(rival.get_node("Driver") as RivalDriver).set_difficulty(difficulty)
 	records.select_event(difficulty, race.total_laps)
 	ui.set_record(records)

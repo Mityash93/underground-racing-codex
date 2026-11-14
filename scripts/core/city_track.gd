@@ -22,6 +22,7 @@ func _ready() -> void:
 	_build_start()
 	CityDistricts.build(self)
 	StreetShowcase.build(self)
+	LanternQuarter.build(self)
 
 func _build_path() -> void:
 	points.clear()
@@ -64,7 +65,7 @@ func in_tunnel(distance: float) -> bool:
 
 func section_name(distance: float) -> String:
 	if in_tunnel(distance):
-		return "ТОННЕЛЬ «ИМПУЛЬС»"
+		return "ТОННЕЛЬ «ПОРТОВЫЙ»"
 	var wrapped := fposmod(distance, track_length)
 	if wrapped >= anchor_distance(7) and wrapped < anchor_distance(9):
 		return "СВЯЗКА «ВОЛНА»"
@@ -99,7 +100,8 @@ func grid_transform() -> Transform3D:
 	return grid
 
 func _build_surface() -> void:
-	GameGeometry.box(self, Vector3(1300, 2, 1300), Vector3(0, -1.04, 0), GameGeometry.material(Color("111d27")))
+	var ground := GameGeometry.box(self, Vector3(1300, 2, 1300), Vector3(0, -1.04, 0), HarborCoast.ground_material(self))
+	ground.name = "CoastalGround"
 	GameGeometry.collider(self, Vector3(1300, 2, 1300), Vector3(0, -1, 0))
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -140,7 +142,8 @@ func _build_streetscape() -> void:
 			concrete.append(GameGeometry.box_transform(edge + Vector3.UP * 0.48, Vector3(0.8, 0.96, length + 0.18), yaw))
 			GameGeometry.collider(self, Vector3(0.8, 1.1, length + 0.18), edge + Vector3.UP * 0.55, yaw)
 			var strips := cyan if sign_side < 0 else orange
-			strips.append(GameGeometry.box_transform(edge + Vector3.UP * 1.01, Vector3(0.12, 0.035, length), yaw))
+			if not LanternQuarter.contains(distances[i]):
+				strips.append(GameGeometry.box_transform(edge + Vector3.UP * 1.01, Vector3(0.12, 0.035, length), yaw))
 			markings.append(GameGeometry.box_transform(center + side * sign_side * 10.8 + Vector3.UP * 0.038, Vector3(0.13, 0.025, length + 0.05), yaw))
 		if i % 2 == 0:
 			markings.append(GameGeometry.box_transform(center + Vector3.UP * 0.04, Vector3(0.16, 0.025, length * 0.58), yaw))
